@@ -1,65 +1,74 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button, Card } from "@/components/ui";
+
+type Stats = {
+  dueCount: number;
+  totalCount: number;
+  currentStreak: number;
+  longestStreak: number;
+  practicedToday: boolean;
+};
+
+export default function HomePage() {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((res) => res.json())
+      .then(setStats);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold">Darija Drill</h1>
+        <p className="text-sm text-muted">Keep the momentum going between classes.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="text-center">
+          <p className="text-3xl font-bold text-primary">{stats ? stats.dueCount : "–"}</p>
+          <p className="text-xs font-medium text-muted">phrases due today</p>
+        </Card>
+        <Card className="text-center">
+          <p className="text-3xl font-bold text-primary">
+            {stats ? stats.currentStreak : "–"} {stats && stats.currentStreak > 0 ? "🔥" : ""}
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          <p className="text-xs font-medium text-muted">day streak</p>
+        </Card>
+      </div>
+
+      {stats && !stats.practicedToday && stats.dueCount === 0 && stats.totalCount > 0 && (
+        <p className="text-center text-xs text-muted">
+          Nothing due right now — nice, you&apos;re all caught up.
+        </p>
+      )}
+
+      <div className="space-y-2.5">
+        <Link href="/drill" className="block">
+          <Button className="w-full !py-4 text-base">🎯 Start Speaking Drill</Button>
+        </Link>
+        <Link href="/roleplay" className="block">
+          <Button variant="secondary" className="w-full !py-4 text-base">
+            💬 Roleplay Chat
+          </Button>
+        </Link>
+      </div>
+
+      <Card>
+        <p className="mb-2 text-sm font-semibold">Just came from class?</p>
+        <p className="mb-3 text-sm text-muted">
+          Log this Saturday&apos;s new phrases while they&apos;re fresh.
+        </p>
+        <Link href="/phrases?add=1" className="block">
+          <Button variant="success" className="w-full">
+            + Log new phrases
+          </Button>
+        </Link>
+      </Card>
     </div>
   );
 }

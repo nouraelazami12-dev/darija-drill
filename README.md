@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Darija Drill
 
-## Getting Started
+A personal Moroccan Darija speaking-practice app: log phrases after class, drill them with spaced repetition, and practice live conversations with an LLM roleplay partner.
 
-First, run the development server:
+## Setup
+
+Node is installed via [nvm](https://github.com/nvm-sh/nvm) at `~/.nvm`. If `node`/`npm` aren't on your PATH in a fresh terminal, run:
+
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+(This is already added to `~/.bash_profile` for login shells.)
+
+Install dependencies (already done):
+
+```bash
+npm install
+```
+
+### Add your Anthropic API key
+
+The Roleplay Chat feature calls the Anthropic API. Get a key from [console.anthropic.com](https://console.anthropic.com/) and add it to `.env`:
+
+```
+ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+Without a key, everything else (My Phrases, Speaking Drill) works fine — only Roleplay Chat needs it.
+
+### Database
+
+SQLite via Prisma, stored at `prisma/dev.db`. Already migrated and seeded with 5 default roleplay scenarios. If you ever reset the schema:
+
+```bash
+npx prisma migrate dev
+npm run db:seed
+```
+
+## Run it
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) — best viewed at phone width, it's mobile-first.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **My Phrases** — add/edit/delete phrases (Arabic script + Latin transliteration + English + optional notes/tag), filter by tag.
+- **Speaking Drill** — pulls phrases due today via a 5-box Leitner system (intervals: 1/2/4/7/14 days). Shows the English prompt, 5s countdown, reveals the Darija answer (+ browser TTS), you self-grade Got it/Close/Missed it.
+- **Roleplay Chat** — pick a scenario, chat with an LLM playing the other character in Darija (Arabic + Latin), with inline corrections and a hint button.
+- **Home** — due count, streak, quick links.

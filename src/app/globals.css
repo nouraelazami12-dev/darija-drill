@@ -1,22 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fdfaf5;
+  --foreground: #2b2420;
+  --card: #ffffff;
+  --border: #eadfd0;
+  --muted: #8a7d6d;
+  --primary: #c2703d;
+  --primary-foreground: #ffffff;
+  --accent: #b7883f;
+  --success: #4a7c59;
+  --warning: #c2703d;
+  --danger: #b3462c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1c1712;
+    --foreground: #f2e9dd;
+    --card: #2a2119;
+    --border: #3d3025;
+    --muted: #a99a86;
+    --primary: #e08a4f;
+    --primary-foreground: #1c1712;
+    --accent: #d4a656;
+    --success: #6ba97a;
+    --warning: #e08a4f;
+    --danger: #e0715a;
   }
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Phrase {
+  id            String   @id @default(cuid())
+  darijaArabic  String
+  darijaLatin   String
+  english       String
+  notes         String?
+  tag           String?
+  box           Int      @default(1)
+  nextReviewAt  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews Review[]
+
+  @@index([nextReviewAt])
+  @@index([tag])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  phraseId  String
+  grade     String
+  boxBefore Int
+  boxAfter  Int
+  reviewedAt DateTime @default(now())
+
+  phrase Phrase @relation(fields: [phraseId], references: [id], onDelete: Cascade)
+
+  @@index([phraseId])
+  @@index([reviewedAt])
+}
+
+model Streak {
+  id                Int      @id @default(1)
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  lastPracticedDate String?
+}
+
+model Scenario {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isCustom    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  scenarioId String
+  role       String
+  content    String
+  createdAt  DateTime @default(now())
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+}

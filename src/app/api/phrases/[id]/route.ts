@@ -1,0 +1,40 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const body = await req.json();
+  const { darijaArabic, darijaLatin, english, notes, tag } = body;
+
+  if (!darijaArabic?.trim() || !darijaLatin?.trim() || !english?.trim()) {
+    return NextResponse.json(
+      { error: "darijaArabic, darijaLatin, and english are required" },
+      { status: 400 }
+    );
+  }
+
+  const phrase = await prisma.phrase.update({
+    where: { id },
+    data: {
+      darijaArabic: darijaArabic.trim(),
+      darijaLatin: darijaLatin.trim(),
+      english: english.trim(),
+      notes: notes?.trim() || null,
+      tag: tag?.trim() || null,
+    },
+  });
+
+  return NextResponse.json(phrase);
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  await prisma.phrase.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}
