@@ -61,7 +61,7 @@ export default function HomePage() {
       <Card>
         <p className="mb-2 text-sm font-semibold">Just came from class?</p>
         <p className="mb-3 text-sm text-muted">
-          Log this Saturday&apos;s new phrases while they&apos;re fresh.
+          Log new phrases while they&apos;re fresh.
         </p>
         <Link href="/phrases?add=1" className="block">
           <Button variant="success" className="w-full">
