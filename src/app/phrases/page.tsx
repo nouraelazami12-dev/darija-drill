@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button, Card } from "@/components/ui";
 import PhraseForm, { PhraseFormValues } from "./PhraseForm";
@@ -73,11 +74,18 @@ function PhrasesPageInner() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold">My Phrases</h1>
-        <Button onClick={() => setShowForm((s) => !s)} className="!px-3 !py-2 text-xs">
-          {showForm ? "Close" : "+ Add phrase"}
-        </Button>
+        <div className="flex gap-1.5">
+          <Link href="/phrases/import">
+            <Button variant="secondary" className="!px-3 !py-2 text-xs">
+              Import
+            </Button>
+          </Link>
+          <Button onClick={() => setShowForm((s) => !s)} className="!px-3 !py-2 text-xs">
+            {showForm ? "Close" : "+ Add"}
+          </Button>
+        </div>
       </div>
 
       {showForm && (

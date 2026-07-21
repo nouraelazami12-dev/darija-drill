@@ -26,3 +26,10 @@ export type ChatMessage = {
   content: string;
   createdAt: string;
 };
+
+export type ExtractedPhrase = {
+  darijaArabic: string;
+  darijaLatin: string;
+  english: string;
+  tag?: string;
+};
