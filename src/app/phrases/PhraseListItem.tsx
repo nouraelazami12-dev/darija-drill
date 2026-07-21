@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui";
 import PhraseForm, { PhraseFormValues } from "./PhraseForm";
+import AudioRecorder from "./AudioRecorder";
 import type { Phrase } from "@/lib/types";
 
 export default function PhraseListItem({
@@ -17,6 +18,7 @@ export default function PhraseListItem({
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(phrase.audioUrl);
 
   if (editing) {
     return (
@@ -55,6 +57,9 @@ export default function PhraseListItem({
               {phrase.tag}
             </span>
           )}
+          <div className="mt-2.5">
+            <AudioRecorder phraseId={phrase.id} audioUrl={audioUrl} onChange={setAudioUrl} />
+          </div>
         </div>
         <div className="flex shrink-0 flex-col gap-1.5">
           <button

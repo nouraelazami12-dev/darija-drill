@@ -40,6 +40,9 @@ yarn-error.log*
 /prisma/*.db
 /prisma/*.db-journal
 
+# user-uploaded phrase audio
+/public/uploads/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

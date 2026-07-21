@@ -14,6 +14,7 @@ model Phrase {
   english       String
   notes         String?
   tag           String?
+  audioUrl      String?
   box           Int      @default(1)
   nextReviewAt  DateTime @default(now())
   createdAt     DateTime @default(now())

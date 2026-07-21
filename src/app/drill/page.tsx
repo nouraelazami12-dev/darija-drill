@@ -10,13 +10,8 @@ const COUNTDOWN_SECONDS = 5;
 type Phase = "countdown" | "revealed";
 type Grade = "got_it" | "close" | "missed";
 
-function speak(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "ar-MA";
-  utterance.rate = 0.9;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+function playAudio(url: string) {
+  new Audio(url).play().catch(() => {});
 }
 
 export default function DrillPage() {
@@ -131,12 +126,14 @@ export default function DrillPage() {
               {current!.darijaArabic}
             </p>
             <p className="text-lg font-medium text-accent">{current!.darijaLatin}</p>
-            <button
-              onClick={() => speak(current!.darijaArabic)}
-              className="mx-auto mt-1 flex items-center gap-1 rounded-full bg-border/50 px-3 py-1.5 text-xs font-medium text-foreground"
-            >
-              🔊 Play audio
-            </button>
+            {current!.audioUrl && (
+              <button
+                onClick={() => playAudio(current!.audioUrl!)}
+                className="mx-auto mt-1 flex items-center gap-1 rounded-full bg-border/50 px-3 py-1.5 text-xs font-medium text-foreground"
+              >
+                🔊 Play audio
+              </button>
+            )}
             {current!.notes && (
               <p className="pt-1 text-xs italic text-muted">{current!.notes}</p>
             )}

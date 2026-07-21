@@ -5,6 +5,7 @@ export type Phrase = {
   english: string;
   notes: string | null;
   tag: string | null;
+  audioUrl: string | null;
   box: number;
   nextReviewAt: string;
   createdAt: string;
