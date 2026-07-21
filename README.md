@@ -1,37 +1,53 @@
 # Darija Drill
 
-A personal Moroccan Darija speaking-practice app: log phrases after class, drill them with spaced repetition, and practice live conversations with an LLM roleplay partner.
+A personal Moroccan Darija speaking-practice app: log phrases after class, drill them with spaced repetition, practice live conversations with an LLM roleplay partner, and import new vocabulary straight from class slides or transcripts.
+
+This runs entirely on your own machine — your phrases, chat history, and any audio you record stay local to you. Each person who wants to use it should set up their own copy following the steps below (it doesn't support multiple people sharing one running copy).
 
 ## Setup
 
-Node is installed via [nvm](https://github.com/nvm-sh/nvm) at `~/.nvm`. If `node`/`npm` aren't on your PATH in a fresh terminal, run:
+### 1. Install Node.js
+
+You need Node 20+. If you don't have it, the easiest way is [nvm](https://github.com/nvm-sh/nvm):
 
 ```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install --lts
 ```
 
-(This is already added to `~/.bash_profile` for login shells.)
+Check it worked: `node -v`
 
-Install dependencies (already done):
+### 2. Install dependencies
+
+From the project folder:
 
 ```bash
 npm install
 ```
 
-### Add your Anthropic API key
+### 3. Set up your `.env`
 
-The Roleplay Chat feature calls the Anthropic API. Get a key from [console.anthropic.com](https://console.anthropic.com/) and add it to `.env`:
+Copy the example file:
 
+```bash
+cp .env.example .env
 ```
-ANTHROPIC_API_KEY="sk-ant-..."
-```
 
-Without a key, everything else (My Phrases, Speaking Drill) works fine — only Roleplay Chat needs it.
+Then add your own Anthropic API key (needed only for Roleplay Chat and the phrase-import feature — My Phrases and Speaking Drill work without it):
 
-### Database
+1. Get a key at [console.anthropic.com](https://console.anthropic.com/) (pay-as-you-go; a small prepaid credit is required).
+2. Open `.env` and set:
+   ```
+   ANTHROPIC_API_KEY="sk-ant-your-key-here"
+   ```
 
-SQLite via Prisma, stored at `prisma/dev.db`. Already migrated and seeded with 5 default roleplay scenarios. If you ever reset the schema:
+Don't commit `.env` or share your key — it's already gitignored.
+
+### 4. Set up the database
+
+Each person gets their own local SQLite database, seeded with the 5 default roleplay scenarios:
 
 ```bash
 npx prisma migrate dev
@@ -44,11 +60,18 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — best viewed at phone width, it's mobile-first.
+Open [http://localhost:3000](http://localhost:3000) — it's mobile-first, so it's worth trying at phone width (or on your phone, via your computer's local network address, which `npm run dev` prints on startup).
 
 ## How it works
 
-- **My Phrases** — add/edit/delete phrases (Arabic script + Latin transliteration + English + optional notes/tag), filter by tag.
-- **Speaking Drill** — pulls phrases due today via a 5-box Leitner system (intervals: 1/2/4/7/14 days). Shows the English prompt, 5s countdown, reveals the Darija answer (+ browser TTS), you self-grade Got it/Close/Missed it.
+- **My Phrases** — add/edit/delete phrases (Arabic script + Latin transliteration + English + optional notes/tag), filter by tag. Each phrase can have your own recorded or uploaded audio attached (mic recording or file upload) — Speaking Drill only offers playback when audio is actually attached.
+- **Import** — paste or upload a text export (Google Slides plain-text, a Zoom `.vtt` transcript, etc.) and Claude extracts Darija/English phrase pairs for you to review and edit before saving.
+- **Speaking Drill** — pulls phrases due today via a 5-box Leitner system (intervals: 1/2/4/7/14 days). Shows the English prompt, 5s countdown, reveals the Darija answer, you self-grade Got it/Close/Missed it.
 - **Roleplay Chat** — pick a scenario, chat with an LLM playing the other character in Darija (Arabic + Latin), with inline corrections and a hint button.
 - **Home** — due count, streak, quick links.
+
+## Notes for sharing with friends
+
+- Everyone needs their own Anthropic API key and pays for their own usage (typically cents to low dollars a month for casual use).
+- There's no login/accounts — this is a single-user app per installation, so each friend runs their own copy with their own data.
+- If you update your copy later (new features, fixes), friends won't get them automatically — you'd need to share the updated code again (e.g. via a shared git repo).
