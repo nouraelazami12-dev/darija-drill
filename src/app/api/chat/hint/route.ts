@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAnthropic, ROLEPLAY_MODEL } from "@/lib/anthropic";
+import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, extractText } from "@/lib/anthropic";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     const response = await anthropic.messages.create({
       model: ROLEPLAY_MODEL,
       max_tokens: 300,
+      thinking: NO_THINKING,
       system:
         "You are a Moroccan Darija tutor. Given a roleplay scenario and the conversation so far, suggest 2-3 short, useful Darija phrases the learner could say next. For each, give the Arabic script, the Latin/Arabizi transliteration, and a brief English gloss. Be concise — no preamble, just the list.",
       messages: [
@@ -39,9 +40,7 @@ export async function POST(req: NextRequest) {
         },
       ],
     });
-    const block = response.content[0];
-    const text = block.type === "text" ? block.text : "";
-    return NextResponse.json({ hint: text });
+    return NextResponse.json({ hint: extractText(response) });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "LLM request failed" },

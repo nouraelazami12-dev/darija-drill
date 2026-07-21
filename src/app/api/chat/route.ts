@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAnthropic, ROLEPLAY_MODEL, roleplaySystemPrompt } from "@/lib/anthropic";
+import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, extractText, roleplaySystemPrompt } from "@/lib/anthropic";
 
 export async function GET(req: NextRequest) {
   const scenarioId = req.nextUrl.searchParams.get("scenarioId");
@@ -46,14 +46,14 @@ export async function POST(req: NextRequest) {
     const response = await anthropic.messages.create({
       model: ROLEPLAY_MODEL,
       max_tokens: 500,
+      thinking: NO_THINKING,
       system: roleplaySystemPrompt(scenario.name, scenario.description ?? ""),
       messages: history.map((m) => ({
         role: m.role === "user" ? "user" : "assistant",
         content: m.content,
       })),
     });
-    const block = response.content[0];
-    assistantText = block.type === "text" ? block.text : "";
+    assistantText = extractText(response);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
