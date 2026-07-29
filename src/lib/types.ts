@@ -23,8 +23,19 @@ export type Scenario = {
 export type ChatMessage = {
   id: string;
   scenarioId: string;
+  sessionId: string | null;
   role: "user" | "assistant";
   content: string;
+  createdAt: string;
+};
+
+export type RoleplaySession = {
+  id: string;
+  scenarioId: string;
+  scriptFormat: "arabizi" | "arabic_script";
+  targetPhrases: Phrase[];
+  usedPhraseIds: string[];
+  modeledPhraseIds: string[];
   createdAt: string;
 };
 
@@ -33,4 +44,5 @@ export type ExtractedPhrase = {
   darijaLatin: string;
   english: string;
   tag?: string;
+  isDuplicate?: boolean;
 };

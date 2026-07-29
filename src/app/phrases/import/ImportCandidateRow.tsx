@@ -25,6 +25,11 @@ export default function ImportCandidateRow({
           className="mt-1.5 h-4 w-4 shrink-0 accent-primary"
         />
         <div className="min-w-0 flex-1 space-y-1.5">
+          {candidate.isDuplicate && (
+            <span className="inline-block rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">
+              Already in your library
+            </span>
+          )}
           <Input
             dir="rtl"
             lang="ar"

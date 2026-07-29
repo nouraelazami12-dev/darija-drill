@@ -64,10 +64,10 @@ Open [http://localhost:3000](http://localhost:3000) — it's mobile-first, so it
 
 ## How it works
 
-- **My Phrases** — add/edit/delete phrases (Arabic script + Latin transliteration + English + optional notes/tag), filter by tag. Each phrase can have your own recorded or uploaded audio attached (mic recording or file upload) — Speaking Drill only offers playback when audio is actually attached.
-- **Import** — paste or upload a text export (Google Slides plain-text, a Zoom `.vtt` transcript, etc.) and Claude extracts Darija/English phrase pairs for you to review and edit before saving.
+- **My Phrases** — add/edit/delete phrases (Arabic script + Latin transliteration + English + optional notes/tag), filter by tag. Each phrase can have your own recorded or uploaded audio attached (mic recording or file upload) — Speaking Drill only offers playback when audio is actually attached. Adding, editing, or importing a phrase that looks like a repeat (same Arabic script or matching Latin spelling) warns you before saving a duplicate, and a "Find duplicates" view scans your whole library for existing repeats.
+- **Import** — paste text, or upload a `.txt`/`.vtt` transcript or a PDF (slides, handouts), and Claude extracts Darija/English phrase pairs for you to review and edit before saving.
 - **Speaking Drill** — pulls phrases due today via a 5-box Leitner system (intervals: 1/2/4/7/14 days). Shows the English prompt, 5s countdown, reveals the Darija answer, you self-grade Got it/Close/Missed it.
-- **Roleplay Chat** — pick a scenario, chat with an LLM playing the other character in Darija (Arabic + Latin), with inline corrections and a hint button.
+- **Roleplay Chat** — pick a scenario and start a session; the app picks a handful of phrases you're already practicing (due for review, or newest/least-mastered) and the LLM naturally works them into the conversation as the other character, modeling each phrase before expecting you to use it. Successfully using one advances its spaced-repetition box and your streak, same as Speaking Drill. A "Practicing this session" panel tracks used/modeled/pending phrases, "New session" re-picks a fresh set, and a hint button nudges you toward phrases you haven't used yet.
 - **Home** — due count, streak, quick links.
 
 ## Notes for sharing with friends

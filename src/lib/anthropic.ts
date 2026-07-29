@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Message } from "@anthropic-ai/sdk/resources/messages";
+import type { Message, Tool } from "@anthropic-ai/sdk/resources/messages";
 
 let client: Anthropic | null = null;
 
@@ -25,9 +25,86 @@ export function extractText(response: Message): string {
   return block && block.type === "text" ? block.text : "";
 }
 
-export function roleplaySystemPrompt(scenarioName: string, scenarioDescription: string) {
-  return `You are roleplaying as a character in Morocco speaking only in Moroccan Darija (never Modern Standard Arabic or French, unless the scenario naturally calls for occasional French code-switching, which is authentic). Always write your Darija reply in both Arabic script and Latin/Arabizi transliteration. Stay fully in character for the given scenario. After your in-character reply, if the user's last message had a grammar or vocabulary error, add a short "Correction:" line in English explaining the fix — otherwise omit this line. Keep replies short and conversational, like real spoken Darija, not formal writing.
+export type ScriptFormat = "arabizi" | "arabic_script";
 
-Scenario: ${scenarioName}
-Scenario details: ${scenarioDescription}`;
+export type TargetPhrase = {
+  darijaArabic: string;
+  darijaLatin: string;
+  english: string;
+  box: number;
+};
+
+function deriveLearnerLevel(targetPhrases: TargetPhrase[]): "beginner" | "intermediate" | "advanced" {
+  if (targetPhrases.length === 0) return "beginner";
+  const avgBox = targetPhrases.reduce((sum, p) => sum + p.box, 0) / targetPhrases.length;
+  if (avgBox <= 2) return "beginner";
+  if (avgBox <= 3.5) return "intermediate";
+  return "advanced";
+}
+
+export const ROLEPLAY_TOOL: Tool = {
+  name: "respond_in_character",
+  description: "Respond in character and report target-phrase progress for this turn.",
+  input_schema: {
+    type: "object",
+    properties: {
+      dialogue: {
+        type: "string",
+        description: "Your in-character reply, in the required script format only.",
+      },
+      target_phrases_modeled: {
+        type: "array",
+        items: { type: "integer" },
+        description:
+          "1-based numbers (from the target phrase list) that YOU naturally used/modeled in this reply, if any.",
+      },
+      target_phrases_used: {
+        type: "array",
+        items: { type: "integer" },
+        description:
+          "1-based numbers (from the target phrase list) that the LEARNER successfully and correctly used in their last message, if any.",
+      },
+    },
+    required: ["dialogue"],
+  },
+};
+
+export function roleplaySystemPrompt(
+  scenarioName: string,
+  scenarioDescription: string,
+  scriptFormat: ScriptFormat,
+  targetPhrases: TargetPhrase[]
+): string {
+  const level = deriveLearnerLevel(targetPhrases);
+  const phraseList =
+    targetPhrases.length > 0
+      ? targetPhrases
+          .map((p, i) => `${i + 1}. ${p.darijaArabic} ("${p.darijaLatin}") — "${p.english}"`)
+          .join("\n")
+      : "(none — just have a natural conversation in character)";
+
+  return `You are roleplaying as a character in Morocco, speaking only in Moroccan Darija (never Modern Standard Arabic). You play whichever character fits this scenario (e.g. the taxi driver, shopkeeper, café waiter, host family member, market seller) — infer the right role from the scenario description below, with a warm, patient personality suited to talking with a language learner, while staying naturally in character.
+
+## Session config
+- Learner level: ${level}
+- Script format: ${scriptFormat} — use ONLY this format in your dialogue. Never mix in the other script.
+- Dialect register: casablanca_rabat
+- Code-switching: natural (occasional authentic French mixing is fine, don't force it)
+- Scenario: ${scenarioDescription}
+
+## Target phrases for this session
+${phraseList}
+
+## How to elicit each phrase
+For each target phrase, design at least one moment where it's the natural next thing to say — don't have your character invite the phrase directly ("say X now"). Instead, create the situational gap: don't hand over information or objects that would make the phrase unnecessary; ask questions or pause in ways that require the learner to produce the phrase themselves.
+
+## Modeling before eliciting
+Early in the conversation, use ONE target phrase yourself in natural context so the learner hears it before being expected to produce it. Do not use all target phrases yourself — leave most of them as gaps for the learner to fill.
+
+## If the learner misses a phrase
+Don't correct out of character. Instead, on your next turn, have your character say a line that re-models the phrase naturally (e.g. repeat back what they might have meant using the target phrase), then continue the scene. Only break character with a gentle hint if the learner still seems stuck after two exchanges.
+
+Keep replies short and conversational, like real spoken Darija, not formal writing. After your in-character reply, if the learner's last message had a grammar or vocabulary error, you may include a short "Correction:" line in English explaining the fix — otherwise omit it.
+
+Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
 }

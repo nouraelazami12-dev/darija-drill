@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Tool, ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
+import type {
+  MessageParam,
+  Tool,
+  ToolUseBlock,
+} from "@anthropic-ai/sdk/resources/messages";
 import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING } from "@/lib/anthropic";
+import { prisma } from "@/lib/prisma";
+import { findMatch } from "@/lib/duplicates";
+
+const MAX_PDF_BYTES = 15 * 1024 * 1024;
 
 const EXTRACT_TOOL: Tool = {
   name: "record_phrases",
@@ -40,11 +48,36 @@ Extract every distinct Darija word or phrase actually being taught, along with i
 Skip filler, headers, unrelated chatter, and anything that isn't an actual Darija phrase being taught. Do not invent phrases that aren't in the source.`;
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { text } = body as { text: string };
+  const contentType = req.headers.get("content-type") ?? "";
+  let content: MessageParam["content"];
 
-  if (!text?.trim()) {
-    return NextResponse.json({ error: "text is required" }, { status: 400 });
+  if (contentType.startsWith("multipart/form-data")) {
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File) || file.type !== "application/pdf") {
+      return NextResponse.json({ error: "a PDF file is required" }, { status: 400 });
+    }
+    if (file.size > MAX_PDF_BYTES) {
+      return NextResponse.json(
+        { error: "That PDF is too large (max 15MB) — try a smaller file or paste the text instead." },
+        { status: 400 }
+      );
+    }
+
+    const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+    content = [
+      { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
+      { type: "text", text: "Extract every Darija phrase from this document." },
+    ];
+  } else {
+    const body = await req.json();
+    const { text } = body as { text: string };
+
+    if (!text?.trim()) {
+      return NextResponse.json({ error: "text is required" }, { status: 400 });
+    }
+    content = text.slice(0, 100_000);
   }
 
   try {
@@ -56,15 +89,24 @@ export async function POST(req: NextRequest) {
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: "record_phrases" },
-      messages: [{ role: "user", content: text.slice(0, 100_000) }],
+      messages: [{ role: "user", content }],
     });
 
     const toolUse = response.content.find(
       (b): b is ToolUseBlock => b.type === "tool_use"
     );
-    const phrases = (toolUse?.input as { phrases?: unknown[] } | undefined)?.phrases ?? [];
+    type Extracted = { darijaArabic: string; darijaLatin: string; english: string; tag?: string };
+    const phrases = ((toolUse?.input as { phrases?: Extracted[] } | undefined)?.phrases ?? []);
 
-    return NextResponse.json({ phrases });
+    const existing = await prisma.phrase.findMany({
+      select: { darijaArabic: true, darijaLatin: true },
+    });
+    const annotated = phrases.map((p) => ({
+      ...p,
+      isDuplicate: !!findMatch(existing, p.darijaArabic ?? "", p.darijaLatin ?? ""),
+    }));
+
+    return NextResponse.json({ phrases: annotated });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "LLM request failed" },

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui";
-import PhraseForm, { PhraseFormValues } from "./PhraseForm";
+import PhraseForm, { PhraseFormValues, SubmitResult } from "./PhraseForm";
 import AudioRecorder from "./AudioRecorder";
 import type { Phrase } from "@/lib/types";
 
@@ -12,7 +12,7 @@ export default function PhraseListItem({
   onDelete,
 }: {
   phrase: Phrase;
-  onUpdate: (id: string, values: PhraseFormValues) => Promise<void>;
+  onUpdate: (id: string, values: PhraseFormValues, force?: boolean) => Promise<SubmitResult>;
   onDelete: (id: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
@@ -32,9 +32,12 @@ export default function PhraseListItem({
             tag: phrase.tag ?? "",
           }}
           submitLabel="Save changes"
-          onSubmit={async (values) => {
-            await onUpdate(phrase.id, values);
-            setEditing(false);
+          onSubmit={async (values, force) => {
+            const result = await onUpdate(phrase.id, values, force);
+            if (!result?.duplicate) {
+              setEditing(false);
+            }
+            return result;
           }}
           onCancel={() => setEditing(false)}
         />
@@ -78,7 +81,7 @@ export default function PhraseListItem({
                 }}
                 className="rounded-lg bg-danger px-2 py-1 text-xs font-medium text-white"
               >
-                Sure?
+                Yes
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}

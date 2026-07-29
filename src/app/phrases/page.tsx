@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button, Card } from "@/components/ui";
-import PhraseForm, { PhraseFormValues } from "./PhraseForm";
+import PhraseForm, { PhraseFormValues, SubmitResult } from "./PhraseForm";
 import PhraseListItem from "./PhraseListItem";
 import type { Phrase } from "@/lib/types";
 
@@ -46,25 +46,35 @@ function PhrasesPageInner() {
     [phrases, activeTag]
   );
 
-  const handleAdd = async (values: PhraseFormValues) => {
+  const handleAdd = async (values: PhraseFormValues, force?: boolean): Promise<SubmitResult> => {
     const res = await fetch("/api/phrases", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, force }),
     });
-    const created = await res.json();
-    setPhrases((prev) => [created, ...prev]);
+    const data = await res.json();
+    if (res.status === 409) {
+      return { duplicate: data.duplicate };
+    }
+    setPhrases((prev) => [data, ...prev]);
     setShowForm(false);
   };
 
-  const handleUpdate = async (id: string, values: PhraseFormValues) => {
+  const handleUpdate = async (
+    id: string,
+    values: PhraseFormValues,
+    force?: boolean
+  ): Promise<SubmitResult> => {
     const res = await fetch(`/api/phrases/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, force }),
     });
-    const updated = await res.json();
-    setPhrases((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    const data = await res.json();
+    if (res.status === 409) {
+      return { duplicate: data.duplicate };
+    }
+    setPhrases((prev) => prev.map((p) => (p.id === id ? data : p)));
   };
 
   const handleDelete = async (id: string) => {
@@ -93,6 +103,10 @@ function PhrasesPageInner() {
           <PhraseForm onSubmit={handleAdd} />
         </Card>
       )}
+
+      <Link href="/phrases/duplicates" className="inline-block text-xs text-muted underline">
+        🔍 Find duplicates
+      </Link>
 
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

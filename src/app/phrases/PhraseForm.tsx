@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Label, Textarea } from "@/components/ui";
+import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 
 export type PhraseFormValues = {
   darijaArabic: string;
@@ -10,6 +10,9 @@ export type PhraseFormValues = {
   notes: string;
   tag: string;
 };
+
+export type DuplicateInfo = { darijaLatin: string; english: string };
+export type SubmitResult = { duplicate?: DuplicateInfo } | void;
 
 const EMPTY: PhraseFormValues = {
   darijaArabic: "",
@@ -27,15 +30,19 @@ export default function PhraseForm({
 }: {
   initial?: PhraseFormValues;
   submitLabel?: string;
-  onSubmit: (values: PhraseFormValues) => Promise<void>;
+  onSubmit: (values: PhraseFormValues, force?: boolean) => Promise<SubmitResult>;
   onCancel?: () => void;
 }) {
   const [values, setValues] = useState<PhraseFormValues>(initial ?? EMPTY);
   const [saving, setSaving] = useState(false);
+  const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null);
 
   const update = (field: keyof PhraseFormValues) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setValues((v) => ({ ...v, [field]: e.target.value }));
+  ) => {
+    setDuplicate(null);
+    setValues((v) => ({ ...v, [field]: e.target.value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +51,23 @@ export default function PhraseForm({
     }
     setSaving(true);
     try {
-      await onSubmit(values);
+      const result = await onSubmit(values);
+      if (result?.duplicate) {
+        setDuplicate(result.duplicate);
+        return;
+      }
+      setDuplicate(null);
+      if (!initial) setValues(EMPTY);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addAnyway = async () => {
+    setSaving(true);
+    try {
+      await onSubmit(values, true);
+      setDuplicate(null);
       if (!initial) setValues(EMPTY);
     } finally {
       setSaving(false);
@@ -96,16 +119,35 @@ export default function PhraseForm({
           onChange={update("tag")}
         />
       </div>
-      <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={saving} className="flex-1">
-          {saving ? "Saving…" : submitLabel}
-        </Button>
-        {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
+
+      {duplicate ? (
+        <Card className="border-warning/50 bg-warning/10 space-y-2">
+          <p className="text-sm">
+            This looks like it might already be in your library:{" "}
+            <span className="font-semibold">{duplicate.darijaLatin}</span> —{" "}
+            {duplicate.english}
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="warning" onClick={addAnyway} disabled={saving} className="flex-1">
+              {saving ? "Adding…" : "Add anyway"}
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setDuplicate(null)}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="flex gap-2 pt-1">
+          <Button type="submit" disabled={saving} className="flex-1">
+            {saving ? "Saving…" : submitLabel}
           </Button>
-        )}
-      </div>
+          {onCancel && (
+            <Button type="button" variant="secondary" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
