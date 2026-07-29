@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
 import TargetPhrasePanel from "./TargetPhrasePanel";
+import ChatBubble from "./ChatBubble";
 import type { ChatMessage, RoleplaySession, Scenario } from "@/lib/types";
 
 type ScriptFormat = "arabizi" | "arabic_script";
@@ -97,6 +98,7 @@ export default function RoleplayChatPage() {
         sessionId: session.id,
         role: "user",
         content: text,
+        translation: null,
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -249,16 +251,7 @@ export default function RoleplayChatPage() {
           </Card>
         )}
         {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap ${
-              m.role === "user"
-                ? "ml-auto bg-primary text-primary-foreground"
-                : "mr-auto bg-card border border-border"
-            }`}
-          >
-            {m.content}
-          </div>
+          <ChatBubble key={m.id} message={m} />
         ))}
         {sending && (
           <div className="mr-auto max-w-[85%] rounded-2xl border border-border bg-card px-3.5 py-2.5 text-sm text-muted">

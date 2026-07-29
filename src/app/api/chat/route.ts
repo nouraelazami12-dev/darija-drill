@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
   const history = allHistory.slice(-30);
 
   let dialogue = "";
+  let translation = "";
   let modeledNumbers: number[] = [];
   let usedNumbers: number[] = [];
 
@@ -89,10 +90,16 @@ export async function POST(req: NextRequest) {
 
     const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
     const input = toolUse?.input as
-      | { dialogue?: string; target_phrases_modeled?: number[]; target_phrases_used?: number[] }
+      | {
+          dialogue?: string;
+          english_translation?: string;
+          target_phrases_modeled?: number[];
+          target_phrases_used?: number[];
+        }
       | undefined;
 
     dialogue = input?.dialogue ?? "";
+    translation = input?.english_translation ?? "";
     modeledNumbers = input?.target_phrases_modeled ?? [];
     usedNumbers = input?.target_phrases_used ?? [];
   } catch (err) {
@@ -138,7 +145,13 @@ export async function POST(req: NextRequest) {
   });
 
   const assistantMessage = await prisma.chatMessage.create({
-    data: { scenarioId: session.scenarioId, sessionId, role: "assistant", content: dialogue },
+    data: {
+      scenarioId: session.scenarioId,
+      sessionId,
+      role: "assistant",
+      content: dialogue,
+      translation: translation || null,
+    },
   });
 
   const refreshedTargetPhrases = await prisma.phrase.findMany({ where: { id: { in: targetIds } } });

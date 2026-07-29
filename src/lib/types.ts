@@ -26,6 +26,7 @@ export type ChatMessage = {
   sessionId: string | null;
   role: "user" | "assistant";
   content: string;
+  translation: string | null;
   createdAt: string;
 };
 

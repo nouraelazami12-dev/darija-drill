@@ -52,6 +52,10 @@ export const ROLEPLAY_TOOL: Tool = {
         type: "string",
         description: "Your in-character reply, in the required script format only.",
       },
+      english_translation: {
+        type: "string",
+        description: "A natural English translation of the dialogue line, for a learner to optionally reveal.",
+      },
       target_phrases_modeled: {
         type: "array",
         items: { type: "integer" },
@@ -65,7 +69,7 @@ export const ROLEPLAY_TOOL: Tool = {
           "1-based numbers (from the target phrase list) that the LEARNER successfully and correctly used in their last message, if any.",
       },
     },
-    required: ["dialogue"],
+    required: ["dialogue", "english_translation"],
   },
 };
 
@@ -106,5 +110,5 @@ Don't correct out of character. Instead, on your next turn, have your character 
 
 Keep replies short and conversational, like real spoken Darija, not formal writing. After your in-character reply, if the learner's last message had a grammar or vocabulary error, you may include a short "Correction:" line in English explaining the fix — otherwise omit it.
 
-Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
+Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line — this is shown to the learner only if they choose to reveal it, so it should stand alone (translate any "Correction:" line too, if present). Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
 }
