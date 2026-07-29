@@ -99,6 +99,7 @@ export default function RoleplayChatPage() {
         role: "user",
         content: text,
         translation: null,
+        correction: null,
         createdAt: new Date().toISOString(),
       },
     ]);

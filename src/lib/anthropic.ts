@@ -56,6 +56,11 @@ export const ROLEPLAY_TOOL: Tool = {
         type: "string",
         description: "A natural English translation of the dialogue line, for a learner to optionally reveal.",
       },
+      correction: {
+        type: "string",
+        description:
+          "Only if the learner's last message had a genuine grammar or vocabulary mistake (wrong word, wrong conjugation, wrong agreement) — a short, friendly English explanation of the fix, quoting what they said and what would be correct. Do NOT use this for style, redundancy, or phrasing you'd merely word differently — only actual errors. Omit this field entirely if their message was grammatically fine, or if there is no learner message yet.",
+      },
       target_phrases_modeled: {
         type: "array",
         items: { type: "integer" },
@@ -108,7 +113,10 @@ Early in the conversation, use ONE target phrase yourself in natural context so 
 ## If the learner misses a phrase
 Don't correct out of character. Instead, on your next turn, have your character say a line that re-models the phrase naturally (e.g. repeat back what they might have meant using the target phrase), then continue the scene. Only break character with a gentle hint if the learner still seems stuck after two exchanges.
 
-Keep replies short and conversational, like real spoken Darija, not formal writing. After your in-character reply, if the learner's last message had a grammar or vocabulary error, you may include a short "Correction:" line in English explaining the fix — otherwise omit it.
+Keep replies short and conversational, like real spoken Darija, not formal writing.
 
-Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line — this is shown to the learner only if they choose to reveal it, so it should stand alone (translate any "Correction:" line too, if present). Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
+## Correcting mistakes
+Check the learner's last message for genuine grammar or vocabulary mistakes only (wrong word, wrong conjugation, wrong agreement) — not style or phrasing you'd merely say differently. If you find a real mistake, explain it briefly and kindly in the \`correction\` field (English, quoting what they said and the more correct version). This is separate from your in-character line, so it never breaks immersion — the app shows it alongside your reply, not instead of it. If their message was grammatically fine, or there is no learner message yet, omit \`correction\` entirely — don't invent something to correct.
+
+Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line, for the learner to optionally reveal. Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
 }

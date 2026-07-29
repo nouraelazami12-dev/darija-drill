@@ -27,6 +27,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   translation: string | null;
+  correction: string | null;
   createdAt: string;
 };
 

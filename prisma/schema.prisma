@@ -80,6 +80,7 @@ model ChatMessage {
   role       String
   content    String
   translation String?
+  correction  String?
   createdAt  DateTime @default(now())
 
   scenario Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)

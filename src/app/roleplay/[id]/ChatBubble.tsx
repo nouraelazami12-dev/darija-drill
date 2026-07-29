@@ -16,6 +16,12 @@ export default function ChatBubble({ message }: { message: ChatMessage }) {
       >
         {message.content}
       </div>
+      {!isUser && message.correction && (
+        <p className="rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground">
+          <span className="font-semibold text-warning">Correction: </span>
+          {message.correction}
+        </p>
+      )}
       {!isUser && message.translation && (
         <div>
           {showTranslation ? (

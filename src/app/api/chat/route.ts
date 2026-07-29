@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
 
   let dialogue = "";
   let translation = "";
+  let correction = "";
   let modeledNumbers: number[] = [];
   let usedNumbers: number[] = [];
 
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
       | {
           dialogue?: string;
           english_translation?: string;
+          correction?: string;
           target_phrases_modeled?: number[];
           target_phrases_used?: number[];
         }
@@ -100,6 +102,7 @@ export async function POST(req: NextRequest) {
 
     dialogue = input?.dialogue ?? "";
     translation = input?.english_translation ?? "";
+    correction = input?.correction ?? "";
     modeledNumbers = input?.target_phrases_modeled ?? [];
     usedNumbers = input?.target_phrases_used ?? [];
   } catch (err) {
@@ -151,6 +154,7 @@ export async function POST(req: NextRequest) {
       role: "assistant",
       content: dialogue,
       translation: translation || null,
+      correction: correction || null,
     },
   });
 
