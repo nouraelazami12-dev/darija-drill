@@ -210,34 +210,65 @@ export default function RoleplayChatPage() {
           >
             {hintLoading ? "…" : "💡 Hint"}
           </Button>
-          {confirmNewSession ? (
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-muted">Start fresh?</span>
-              <button
-                onClick={() => startSession(session.scriptFormat)}
-                disabled={starting}
-                className="rounded-full bg-danger px-2.5 py-1 font-medium text-white"
-              >
-                {starting ? "…" : "Yes"}
-              </button>
-              <button
-                onClick={() => setConfirmNewSession(false)}
-                className="rounded-full px-2.5 py-1 text-muted"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <Button
-              variant="secondary"
-              onClick={() => setConfirmNewSession(true)}
-              className="!px-3 !py-1.5 text-xs"
-            >
-              🔄 New session
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setScriptFormat(session.scriptFormat as ScriptFormat);
+              setConfirmNewSession(true);
+            }}
+            className="!px-3 !py-1.5 text-xs"
+          >
+            🔄 New session
+          </Button>
         </div>
       </div>
+
+      {confirmNewSession && (
+        <Card className="mb-2 space-y-3">
+          <div>
+            <p className="text-sm font-medium">Start a new session?</p>
+            <p className="text-xs text-muted">
+              Picks a fresh set of target phrases and clears the visible conversation (your old
+              chat stays saved, just hidden).
+            </p>
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-muted">
+              Script format for the other character&apos;s replies
+            </p>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setScriptFormat("arabizi")}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  scriptFormat === "arabizi"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border text-muted"
+                }`}
+              >
+                Arabizi (Latin)
+              </button>
+              <button
+                onClick={() => setScriptFormat("arabic_script")}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  scriptFormat === "arabic_script"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border text-muted"
+                }`}
+              >
+                Arabic script
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => startSession(scriptFormat)} disabled={starting} className="flex-1">
+              {starting ? "Starting…" : "Start new session"}
+            </Button>
+            <Button variant="secondary" onClick={() => setConfirmNewSession(false)}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <TargetPhrasePanel
         targetPhrases={session.targetPhrases}
