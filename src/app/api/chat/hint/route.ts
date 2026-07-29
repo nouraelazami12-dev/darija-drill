@@ -36,9 +36,15 @@ export async function POST(req: NextRequest) {
     ? history.map((m) => `${m.role}: ${m.content}`).join("\n")
     : "(conversation hasn't started yet)";
 
+  const lastNpcMessage = [...history].reverse().find((m) => m.role === "assistant")?.content;
+
   const pendingList = pendingPhrases.length
     ? pendingPhrases.map((p) => `- ${p.darijaArabic} ("${p.darijaLatin}") — "${p.english}"`).join("\n")
-    : "(none left — the learner has used every target phrase already! Suggest a natural way to wrap up or continue the conversation.)";
+    : "(none left — the learner has used every target phrase already.)";
+
+  const task = lastNpcMessage
+    ? `The other character's most recent line was:\n"${lastNpcMessage}"\n\nSuggest 1-2 natural ways the learner could reply to THAT SPECIFIC LINE right now — real responses to what was just said, not generic phrases. If one of the pending target phrases fits naturally into a reply, work it in, but only if it genuinely fits; don't force it.`
+    : `The conversation hasn't started yet. Suggest 1-2 natural ways the learner could open it, ideally working in one of the pending target phrases if it fits.`;
 
   try {
     const anthropic = getAnthropic();
@@ -47,11 +53,11 @@ export async function POST(req: NextRequest) {
       max_tokens: 300,
       thinking: NO_THINKING,
       system:
-        "You are a Moroccan Darija tutor helping a learner mid-roleplay. Given the conversation so far and a list of specific target phrases they're still trying to work into the conversation, suggest how they could naturally bring up 1-2 of those phrases right now. For each, give the Arabic script, the Latin/Arabizi transliteration, and a brief English gloss, plus a one-line tip on when to say it. Be concise — no preamble, just the suggestions.",
+        "You are a Moroccan Darija tutor helping a learner mid-roleplay respond to what the other character just said. Suggest concrete, relevant replies to their most recent line — not a generic vocabulary list. For each suggestion, give the Arabic script, the Latin/Arabizi transliteration, and a brief English gloss. Be concise — no preamble, just the suggestions.",
       messages: [
         {
           role: "user",
-          content: `Scenario: ${scenario.name} — ${scenario.description ?? ""}\n\nConversation so far:\n${transcript}\n\nTarget phrases still pending:\n${pendingList}\n\nSuggest how to bring up 1-2 of the pending phrases right now.`,
+          content: `Scenario: ${scenario.name} — ${scenario.description ?? ""}\n\nConversation so far:\n${transcript}\n\nTarget phrases still pending (use only if they genuinely fit a reply):\n${pendingList}\n\n${task}`,
         },
       ],
     });
