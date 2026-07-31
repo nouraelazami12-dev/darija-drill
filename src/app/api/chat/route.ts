@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     const anthropic = getAnthropic();
     const response = await anthropic.messages.create({
       model: ROLEPLAY_MODEL,
-      max_tokens: 500,
+      max_tokens: 1024,
       thinking: NO_THINKING,
       system: roleplaySystemPrompt(
         scenario.name,
