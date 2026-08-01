@@ -57,7 +57,7 @@ export const ROLEPLAY_TOOL: Tool = {
       correction: {
         type: "string",
         description:
-          "Only if the learner's last message had a genuine grammar or vocabulary mistake (wrong word, wrong conjugation, wrong agreement) — a short, friendly English explanation of the fix, quoting what they said and what would be correct. Do NOT use this for style, redundancy, or phrasing you'd merely word differently — only actual errors. Omit this field entirely if their message was grammatically fine, or if there is no learner message yet.",
+          "Only if the SINGLE MOST RECENT learner message (the very last user turn, ignoring all earlier turns) had a genuine grammar or vocabulary mistake (wrong word, wrong conjugation, wrong agreement) — a short, friendly English explanation of the fix, quoting what they said and what would be correct. Do NOT use this for style, redundancy, or phrasing you'd merely word differently — only actual errors. Do NOT re-raise or restate a correction about an earlier message, even if it was never fixed or the same mistake pattern recurs later — only ever evaluate the latest message in isolation. Omit this field entirely if that latest message was grammatically fine, or if there is no learner message yet.",
       },
       target_phrases_modeled: {
         type: "array",
@@ -129,7 +129,9 @@ Early in the conversation, use ONE target phrase yourself in natural context so 
 Don't correct out of character. Instead, on your next turn, have your character say a line that re-models the phrase naturally (e.g. repeat back what they might have meant using the target phrase), then continue the scene. Only break character with a gentle hint if the learner still seems stuck after two exchanges.
 
 ## Correcting mistakes
-Check the learner's last message for genuine grammar or vocabulary mistakes only (wrong word, wrong conjugation, wrong agreement) — not style or phrasing you'd merely say differently. If you find a real mistake, explain it briefly and kindly in the \`correction\` field (English, quoting what they said and the more correct version). This is separate from your in-character line, so it never breaks immersion — the app shows it alongside your reply, not instead of it. If their message was grammatically fine, or there is no learner message yet, omit \`correction\` entirely — don't invent something to correct.
+Check ONLY the single most recent learner message — the very last user turn — for genuine grammar or vocabulary mistakes (wrong word, wrong conjugation, wrong agreement), not style or phrasing you'd merely say differently. If you find a real mistake in THAT message, explain it briefly and kindly in the \`correction\` field (English, quoting what they said and the more correct version). This is separate from your in-character line, so it never breaks immersion — the app shows it alongside your reply, not instead of it.
+
+Never look further back than that one latest message. If an earlier message had a mistake that was already corrected (or never corrected), do not mention it again — even if the learner repeats the same kind of error later, treat each turn as a fresh, independent check. If the latest message was grammatically fine, omit \`correction\` entirely — don't invent something to correct, and don't recycle a previous correction.
 
 Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line, for the learner to optionally reveal. Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
 }
