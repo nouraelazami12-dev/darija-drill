@@ -36,17 +36,25 @@ export default function PhraseForm({
   const [values, setValues] = useState<PhraseFormValues>(initial ?? EMPTY);
   const [saving, setSaving] = useState(false);
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const update = (field: keyof PhraseFormValues) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setDuplicate(null);
+    setValidationError(null);
     setValues((v) => ({ ...v, [field]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!values.darijaArabic.trim() || !values.darijaLatin.trim() || !values.english.trim()) {
+    setValidationError(null);
+    const missing: string[] = [];
+    if (!values.darijaArabic.trim()) missing.push("Arabic script");
+    if (!values.darijaLatin.trim()) missing.push("Latin transliteration");
+    if (!values.english.trim()) missing.push("English meaning");
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}.`);
       return;
     }
     setSaving(true);
@@ -119,6 +127,8 @@ export default function PhraseForm({
           onChange={update("tag")}
         />
       </div>
+
+      {validationError && <p className="text-sm text-danger">{validationError}</p>}
 
       {duplicate ? (
         <Card className="border-warning/50 bg-warning/10 space-y-2">
