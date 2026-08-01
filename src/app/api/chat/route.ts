@@ -48,6 +48,12 @@ export async function POST(req: NextRequest) {
   const byId = new Map(targetPhrasesUnordered.map((p) => [p.id, p]));
   const targetPhrases = targetIds.map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => !!p);
 
+  const knownVocabulary = await prisma.phrase.findMany({
+    where: { id: { notIn: targetIds } },
+    orderBy: [{ box: "desc" }, { createdAt: "desc" }],
+    take: 40,
+  });
+
   const userMessage = await prisma.chatMessage.create({
     data: { scenarioId: session.scenarioId, sessionId, role: "user", content: message.trim() },
   });
@@ -79,6 +85,11 @@ export async function POST(req: NextRequest) {
           darijaLatin: p.darijaLatin,
           english: p.english,
           box: p.box,
+        })),
+        knownVocabulary.map((p) => ({
+          darijaArabic: p.darijaArabic,
+          darijaLatin: p.darijaLatin,
+          english: p.english,
         }))
       ),
       tools: [ROLEPLAY_TOOL],
