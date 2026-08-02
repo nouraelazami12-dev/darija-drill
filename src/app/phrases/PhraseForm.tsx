@@ -50,7 +50,6 @@ export default function PhraseForm({
     e.preventDefault();
     setValidationError(null);
     const missing: string[] = [];
-    if (!values.darijaArabic.trim()) missing.push("Arabic script");
     if (!values.darijaLatin.trim()) missing.push("Latin transliteration");
     if (!values.english.trim()) missing.push("English meaning");
     if (missing.length > 0) {
@@ -85,7 +84,7 @@ export default function PhraseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <Label>Darija (Arabic script)</Label>
+        <Label>Darija (Arabic script, optional)</Label>
         <Input
           dir="rtl"
           lang="ar"

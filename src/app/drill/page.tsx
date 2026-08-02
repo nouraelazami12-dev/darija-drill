@@ -122,9 +122,11 @@ export default function DrillPage() {
           </div>
         ) : (
           <div className="space-y-2 border-t border-border pt-4">
-            <p dir="rtl" lang="ar" className="text-2xl leading-snug">
-              {current!.darijaArabic}
-            </p>
+            {current!.darijaArabic && (
+              <p dir="rtl" lang="ar" className="text-2xl leading-snug">
+                {current!.darijaArabic}
+              </p>
+            )}
             <p className="text-lg font-medium text-accent">{current!.darijaLatin}</p>
             {current!.audioUrl && (
               <button

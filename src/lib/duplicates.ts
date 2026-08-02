@@ -1,5 +1,5 @@
 export type PhraseLike = {
-  darijaArabic: string;
+  darijaArabic: string | null;
   darijaLatin: string;
 };
 
@@ -7,17 +7,25 @@ function normalizeLatin(s: string): string {
   return s.trim().toLowerCase();
 }
 
+// Two Arabic scripts only "match" if both are actually present — otherwise
+// every phrase with no Arabic script would look like a duplicate of every
+// other one.
+function arabicMatches(a: string | null, b: string | null): boolean {
+  const aNorm = a?.trim();
+  const bNorm = b?.trim();
+  return !!aNorm && !!bNorm && aNorm === bNorm;
+}
+
 export function findMatch<T extends PhraseLike>(
   existing: T[],
-  darijaArabic: string,
+  darijaArabic: string | null,
   darijaLatin: string
 ): T | null {
-  const arabicNorm = darijaArabic.trim();
   const latinNorm = normalizeLatin(darijaLatin);
 
   return (
     existing.find(
-      (p) => p.darijaArabic.trim() === arabicNorm || normalizeLatin(p.darijaLatin) === latinNorm
+      (p) => arabicMatches(p.darijaArabic, darijaArabic) || normalizeLatin(p.darijaLatin) === latinNorm
     ) ?? null
   );
 }
@@ -51,10 +59,7 @@ export function groupDuplicates<T extends PhraseLike & { id: string }>(phrases: 
     for (let j = i + 1; j < phrases.length; j++) {
       const a = phrases[i];
       const b = phrases[j];
-      if (
-        a.darijaArabic.trim() === b.darijaArabic.trim() ||
-        normalizeLatin(a.darijaLatin) === normalizeLatin(b.darijaLatin)
-      ) {
+      if (arabicMatches(a.darijaArabic, b.darijaArabic) || normalizeLatin(a.darijaLatin) === normalizeLatin(b.darijaLatin)) {
         union(a.id, b.id);
       }
     }

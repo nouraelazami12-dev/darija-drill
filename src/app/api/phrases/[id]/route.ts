@@ -10,9 +10,9 @@ export async function PUT(
   const body = await req.json();
   const { darijaArabic, darijaLatin, english, notes, tag, force } = body;
 
-  if (!darijaArabic?.trim() || !darijaLatin?.trim() || !english?.trim()) {
+  if (!darijaLatin?.trim() || !english?.trim()) {
     return NextResponse.json(
-      { error: "darijaArabic, darijaLatin, and english are required" },
+      { error: "darijaLatin and english are required" },
       { status: 400 }
     );
   }
@@ -22,7 +22,7 @@ export async function PUT(
       where: { id: { not: id } },
       select: { darijaArabic: true, darijaLatin: true, english: true },
     });
-    const match = findMatch(existing, darijaArabic, darijaLatin);
+    const match = findMatch(existing, darijaArabic?.trim() || null, darijaLatin);
     if (match) {
       return NextResponse.json(
         { duplicate: { darijaLatin: match.darijaLatin, english: match.english } },
@@ -34,7 +34,7 @@ export async function PUT(
   const phrase = await prisma.phrase.update({
     where: { id },
     data: {
-      darijaArabic: darijaArabic.trim(),
+      darijaArabic: darijaArabic?.trim() || null,
       darijaLatin: darijaLatin.trim(),
       english: english.trim(),
       notes: notes?.trim() || null,

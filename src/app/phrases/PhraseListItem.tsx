@@ -25,7 +25,7 @@ export default function PhraseListItem({
       <Card>
         <PhraseForm
           initial={{
-            darijaArabic: phrase.darijaArabic,
+            darijaArabic: phrase.darijaArabic ?? "",
             darijaLatin: phrase.darijaLatin,
             english: phrase.english,
             notes: phrase.notes ?? "",
@@ -49,9 +49,11 @@ export default function PhraseListItem({
     <Card>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p dir="rtl" lang="ar" className="text-lg leading-snug">
-            {phrase.darijaArabic}
-          </p>
+          {phrase.darijaArabic && (
+            <p dir="rtl" lang="ar" className="text-lg leading-snug">
+              {phrase.darijaArabic}
+            </p>
+          )}
           <p className="text-sm font-medium text-accent">{phrase.darijaLatin}</p>
           <p className="mt-1 text-sm text-muted">{phrase.english}</p>
           {phrase.notes && <p className="mt-1 text-xs text-muted italic">{phrase.notes}</p>}

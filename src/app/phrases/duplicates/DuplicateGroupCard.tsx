@@ -17,9 +17,11 @@ function PhraseRow({
   return (
     <div className="flex items-start justify-between gap-2 border-b border-border py-3 last:border-b-0">
       <div className="min-w-0 flex-1">
-        <p dir="rtl" lang="ar" className="text-base leading-snug">
-          {phrase.darijaArabic}
-        </p>
+        {phrase.darijaArabic && (
+          <p dir="rtl" lang="ar" className="text-base leading-snug">
+            {phrase.darijaArabic}
+          </p>
+        )}
         <p className="text-sm font-medium text-accent">{phrase.darijaLatin}</p>
         <p className="text-sm text-muted">{phrase.english}</p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">

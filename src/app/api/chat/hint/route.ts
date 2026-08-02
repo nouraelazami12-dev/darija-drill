@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, extractText } from "@/lib/anthropic";
+import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, extractText, formatDarija } from "@/lib/anthropic";
 import { parseIdArray } from "@/lib/roleplay";
 
 export async function POST(req: NextRequest) {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   const lastNpcMessage = [...history].reverse().find((m) => m.role === "assistant")?.content;
 
   const pendingList = pendingPhrases.length
-    ? pendingPhrases.map((p) => `- ${p.darijaArabic} ("${p.darijaLatin}") — "${p.english}"`).join("\n")
+    ? pendingPhrases.map((p) => `- ${formatDarija(p)} — "${p.english}"`).join("\n")
     : "(none left — the learner has used every target phrase already.)";
 
   const task = lastNpcMessage

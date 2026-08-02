@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 type IncomingPhrase = {
-  darijaArabic: string;
+  darijaArabic?: string;
   darijaLatin: string;
   english: string;
   notes?: string;
@@ -17,13 +17,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "phrases must be a non-empty array" }, { status: 400 });
   }
 
-  const valid = phrases.filter(
-    (p) => p.darijaArabic?.trim() && p.darijaLatin?.trim() && p.english?.trim()
-  );
+  const valid = phrases.filter((p) => p.darijaLatin?.trim() && p.english?.trim());
 
   if (valid.length === 0) {
     return NextResponse.json(
-      { error: "no valid phrases (each needs darijaArabic, darijaLatin, english)" },
+      { error: "no valid phrases (each needs darijaLatin and english)" },
       { status: 400 }
     );
   }
@@ -32,7 +30,7 @@ export async function POST(req: NextRequest) {
     valid.map((p) =>
       prisma.phrase.create({
         data: {
-          darijaArabic: p.darijaArabic.trim(),
+          darijaArabic: p.darijaArabic?.trim() || null,
           darijaLatin: p.darijaLatin.trim(),
           english: p.english.trim(),
           notes: p.notes?.trim() || null,

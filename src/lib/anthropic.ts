@@ -28,17 +28,21 @@ export function extractText(response: Message): string {
 export type ScriptFormat = "arabizi" | "arabic_script";
 
 export type TargetPhrase = {
-  darijaArabic: string;
+  darijaArabic: string | null;
   darijaLatin: string;
   english: string;
   box: number;
 };
 
 export type KnownVocabItem = {
-  darijaArabic: string;
+  darijaArabic: string | null;
   darijaLatin: string;
   english: string;
 };
+
+export function formatDarija(p: { darijaArabic: string | null; darijaLatin: string }): string {
+  return p.darijaArabic ? `${p.darijaArabic} ("${p.darijaLatin}")` : `"${p.darijaLatin}"`;
+}
 
 export const ROLEPLAY_TOOL: Tool = {
   name: "respond_in_character",
@@ -85,14 +89,12 @@ export function roleplaySystemPrompt(
 ): string {
   const phraseList =
     targetPhrases.length > 0
-      ? targetPhrases
-          .map((p, i) => `${i + 1}. ${p.darijaArabic} ("${p.darijaLatin}") — "${p.english}"`)
-          .join("\n")
+      ? targetPhrases.map((p, i) => `${i + 1}. ${formatDarija(p)} — "${p.english}"`).join("\n")
       : "(none — just have a natural conversation in character)";
 
   const vocabList =
     knownVocabulary.length > 0
-      ? knownVocabulary.map((p) => `- ${p.darijaArabic} ("${p.darijaLatin}") — "${p.english}"`).join("\n")
+      ? knownVocabulary.map((p) => `- ${formatDarija(p)} — "${p.english}"`).join("\n")
       : "(none recorded yet)";
 
   return `You are roleplaying as a character in Morocco, speaking only in Moroccan Darija (never Modern Standard Arabic). You play whichever character fits this scenario (e.g. the taxi driver, shopkeeper, café waiter, host family member, market seller) — infer the right role from the scenario description below, with a warm, patient personality suited to talking with a language learner, while staying naturally in character.

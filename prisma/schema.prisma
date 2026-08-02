@@ -9,7 +9,7 @@ datasource db {
 
 model Phrase {
   id            String   @id @default(cuid())
-  darijaArabic  String
+  darijaArabic  String?
   darijaLatin   String
   english       String
   notes         String?

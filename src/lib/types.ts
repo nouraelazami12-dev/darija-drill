@@ -1,6 +1,6 @@
 export type Phrase = {
   id: string;
-  darijaArabic: string;
+  darijaArabic: string | null;
   darijaLatin: string;
   english: string;
   notes: string | null;

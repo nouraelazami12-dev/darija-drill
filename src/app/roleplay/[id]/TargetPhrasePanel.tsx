@@ -27,7 +27,7 @@ export default function TargetPhrasePanel({
           return (
             <span
               key={p.id}
-              title={`${p.darijaArabic} / ${p.darijaLatin} — ${p.english}`}
+              title={`${p.darijaArabic ? p.darijaArabic + " / " : ""}${p.darijaLatin} — ${p.english}`}
               className={`rounded-full px-2 py-1 text-xs font-medium ${
                 used
                   ? "bg-success/15 text-success"
