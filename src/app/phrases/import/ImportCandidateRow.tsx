@@ -33,7 +33,7 @@ export default function ImportCandidateRow({
           <Input
             dir="rtl"
             lang="ar"
-            value={candidate.darijaArabic}
+            value={candidate.darijaArabic ?? ""}
             onChange={update("darijaArabic")}
             disabled={!candidate.include}
           />

@@ -22,7 +22,10 @@ const EXTRACT_TOOL: Tool = {
         items: {
           type: "object",
           properties: {
-            darijaArabic: { type: "string", description: "The phrase in Arabic script." },
+            darijaArabic: {
+              type: "string",
+              description: "The phrase in Arabic script, if the source has it or you're confident in the spelling. Omit if unsure.",
+            },
             darijaLatin: { type: "string", description: "The phrase in Latin/Arabizi transliteration." },
             english: { type: "string", description: "The English meaning." },
             tag: {
@@ -30,7 +33,7 @@ const EXTRACT_TOOL: Tool = {
               description: "A short topic tag if obvious from context (e.g. 'taxi', 'greetings', 'numbers'), otherwise omit.",
             },
           },
-          required: ["darijaArabic", "darijaLatin", "english"],
+          required: ["darijaLatin", "english"],
         },
       },
     },
@@ -95,19 +98,21 @@ export async function POST(req: NextRequest) {
     const toolUse = response.content.find(
       (b): b is ToolUseBlock => b.type === "tool_use"
     );
-    type Extracted = { darijaArabic: string; darijaLatin: string; english: string; tag?: string };
-    const phrases = ((toolUse?.input as { phrases?: Extracted[] } | undefined)?.phrases ?? []);
+    type Extracted = { darijaArabic?: string; darijaLatin: string; english: string; tag?: string };
+    const rawPhrases = (toolUse?.input as { phrases?: unknown } | undefined)?.phrases;
+    const phrases: Extracted[] = Array.isArray(rawPhrases) ? rawPhrases : [];
 
     const existing = await prisma.phrase.findMany({
       select: { darijaArabic: true, darijaLatin: true },
     });
     const annotated = phrases.map((p) => ({
       ...p,
-      isDuplicate: !!findMatch(existing, p.darijaArabic ?? "", p.darijaLatin ?? ""),
+      isDuplicate: !!findMatch(existing, p.darijaArabic ?? null, p.darijaLatin ?? ""),
     }));
 
     return NextResponse.json({ phrases: annotated });
   } catch (err) {
+    console.error("phrases/extract failed:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "LLM request failed" },
       { status: 502 }

@@ -42,7 +42,7 @@ export type RoleplaySession = {
 };
 
 export type ExtractedPhrase = {
-  darijaArabic: string;
+  darijaArabic?: string;
   darijaLatin: string;
   english: string;
   tag?: string;
