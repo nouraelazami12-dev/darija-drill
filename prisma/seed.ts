@@ -28,6 +28,11 @@ const DEFAULT_SCENARIOS = [
     description:
       "You're browsing a souk stall and want to negotiate the price of an item you like — a bit of back-and-forth haggling with the seller.",
   },
+  {
+    name: "Texting a friend",
+    description:
+      "You're texting a Moroccan friend just to check in and say hi — a casual, low-stakes text conversation. Keep messages short and casual, the way real texts read, not full spoken sentences.",
+  },
 ];
 
 async function main() {
