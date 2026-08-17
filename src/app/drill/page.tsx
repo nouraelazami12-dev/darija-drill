@@ -5,38 +5,44 @@ import Link from "next/link";
 import { Button, Card } from "@/components/ui";
 import type { Phrase } from "@/lib/types";
 
-const COUNTDOWN_SECONDS = 5;
+const MIN_COUNTDOWN_SECONDS = 5;
+const MAX_COUNTDOWN_SECONDS = 20;
+const SECONDS_PER_WORD = 2;
+const BASE_SECONDS = 3;
 
 type Phase = "countdown" | "revealed";
 type Grade = "got_it" | "close" | "missed";
+
+function countdownFor(text: string): number {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const seconds = BASE_SECONDS + wordCount * SECONDS_PER_WORD;
+  return Math.min(MAX_COUNTDOWN_SECONDS, Math.max(MIN_COUNTDOWN_SECONDS, seconds));
+}
 
 function playAudio(url: string) {
   new Audio(url).play().catch(() => {});
 }
 
-export default function DrillPage() {
-  const [queue, setQueue] = useState<Phrase[] | null>(null);
-  const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>("countdown");
-  const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
-  const [sessionDone, setSessionDone] = useState(0);
+// Keyed by phrase id from the parent, so each new card gets a fresh mount and its
+// countdown state naturally initializes from `duration` instead of being reset via an effect.
+function Countdown({
+  duration,
+  onExpire,
+  onReady,
+}: {
+  duration: number;
+  onExpire: () => void;
+  onReady: () => void;
+}) {
+  const [secondsLeft, setSecondsLeft] = useState(duration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetch("/api/drill/due")
-      .then((res) => res.json())
-      .then((data) => setQueue(data));
-  }, []);
-
-  const current = queue?.[index];
-
-  useEffect(() => {
-    if (!current || phase !== "countdown") return;
     timerRef.current = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(timerRef.current!);
-          setPhase("revealed");
+          onExpire();
           return 0;
         }
         return s - 1;
@@ -46,12 +52,39 @@ export default function DrillPage() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, phase === "countdown"]);
+  }, []);
 
-  const reveal = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setPhase("revealed");
-  };
+  return (
+    <div className="space-y-3 pt-2">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-4 border-primary text-2xl font-bold text-primary">
+        {secondsLeft}
+      </div>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          if (timerRef.current) clearInterval(timerRef.current);
+          onReady();
+        }}
+      >
+        I&apos;m ready
+      </Button>
+    </div>
+  );
+}
+
+export default function DrillPage() {
+  const [queue, setQueue] = useState<Phrase[] | null>(null);
+  const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>("countdown");
+  const [sessionDone, setSessionDone] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/drill/due")
+      .then((res) => res.json())
+      .then((data) => setQueue(data));
+  }, []);
+
+  const current = queue?.[index];
 
   const grade = async (g: Grade) => {
     if (!current) return;
@@ -63,7 +96,6 @@ export default function DrillPage() {
     setSessionDone((n) => n + 1);
     if (queue && index + 1 < queue.length) {
       setIndex((i) => i + 1);
-      setSecondsLeft(COUNTDOWN_SECONDS);
       setPhase("countdown");
     } else {
       setQueue([]);
@@ -112,14 +144,12 @@ export default function DrillPage() {
         <p className="text-2xl font-semibold leading-snug">{current!.english}</p>
 
         {phase === "countdown" ? (
-          <div className="space-y-3 pt-2">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-4 border-primary text-2xl font-bold text-primary">
-              {secondsLeft}
-            </div>
-            <Button variant="secondary" onClick={reveal}>
-              I&apos;m ready
-            </Button>
-          </div>
+          <Countdown
+            key={current!.id}
+            duration={countdownFor(current!.english)}
+            onExpire={() => setPhase("revealed")}
+            onReady={() => setPhase("revealed")}
+          />
         ) : (
           <div className="space-y-2 border-t border-border pt-4">
             {current!.darijaArabic && (
