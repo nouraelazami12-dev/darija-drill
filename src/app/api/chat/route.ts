@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
   let correction = "";
   let modeledNumbers: number[] = [];
   let usedNumbers: number[] = [];
+  let missedNumbers: number[] = [];
 
   try {
     const anthropic = getAnthropic();
@@ -108,6 +109,7 @@ export async function POST(req: NextRequest) {
           correction?: string;
           target_phrases_modeled?: number[];
           target_phrases_used?: number[];
+          target_phrases_missed?: number[];
         }
       | undefined;
 
@@ -116,6 +118,7 @@ export async function POST(req: NextRequest) {
     correction = input?.correction ?? "";
     modeledNumbers = input?.target_phrases_modeled ?? [];
     usedNumbers = input?.target_phrases_used ?? [];
+    missedNumbers = input?.target_phrases_missed ?? [];
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
@@ -126,6 +129,10 @@ export async function POST(req: NextRequest) {
   const numberToPhraseId = (n: number) => targetPhrases[n - 1]?.id;
   const modeledIds = modeledNumbers.map(numberToPhraseId).filter((id): id is string => !!id);
   const usedIds = usedNumbers.map(numberToPhraseId).filter((id): id is string => !!id);
+  const missedIds = missedNumbers
+    .map(numberToPhraseId)
+    .filter((id): id is string => !!id)
+    .filter((id) => !usedIds.includes(id));
 
   const previouslyUsed = parseIdArray(session.usedPhraseIds);
   const previouslyModeled = parseIdArray(session.modeledPhraseIds);
@@ -143,7 +150,21 @@ export async function POST(req: NextRequest) {
       data: { phraseId, grade: "got_it", boxBefore: phrase.box, boxAfter },
     });
   }
-  if (newlyUsedIds.length > 0) {
+
+  for (const phraseId of missedIds) {
+    const phrase = byId.get(phraseId);
+    if (!phrase) continue;
+    const boxAfter = nextBox(phrase.box, "missed");
+    await prisma.phrase.update({
+      where: { id: phraseId },
+      data: { box: boxAfter, nextReviewAt: nextReviewDate(boxAfter) },
+    });
+    await prisma.review.create({
+      data: { phraseId, grade: "missed", boxBefore: phrase.box, boxAfter },
+    });
+  }
+
+  if (newlyUsedIds.length > 0 || missedIds.length > 0) {
     await recordPracticeToday();
   }
 

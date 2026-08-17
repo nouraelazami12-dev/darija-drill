@@ -28,32 +28,20 @@ export default function HomePage() {
         <p className="text-sm text-muted">Keep the momentum going between classes.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="text-center">
-          <p className="text-3xl font-bold text-primary">{stats ? stats.dueCount : "–"}</p>
-          <p className="text-xs font-medium text-muted">phrases due today</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-3xl font-bold text-primary">
-            {stats ? stats.currentStreak : "–"} {stats && stats.currentStreak > 0 ? "🔥" : ""}
-          </p>
-          <p className="text-xs font-medium text-muted">day streak</p>
-        </Card>
-      </div>
-
-      {stats && !stats.practicedToday && stats.dueCount === 0 && stats.totalCount > 0 && (
-        <p className="text-center text-xs text-muted">
-          Nothing due right now — nice, you&apos;re all caught up.
+      <Card className="text-center">
+        <p className="text-3xl font-bold text-primary">
+          {stats ? stats.currentStreak : "–"} {stats && stats.currentStreak > 0 ? "🔥" : ""}
         </p>
-      )}
+        <p className="text-xs font-medium text-muted">day streak</p>
+      </Card>
 
       <div className="space-y-2.5">
-        <Link href="/drill" className="block">
-          <Button className="w-full !py-4 text-base">🎯 Start Speaking Drill</Button>
-        </Link>
         <Link href="/roleplay" className="block">
+          <Button className="w-full !py-4 text-base">💬 Roleplay Chat</Button>
+        </Link>
+        <Link href="/verbs" className="block">
           <Button variant="secondary" className="w-full !py-4 text-base">
-            💬 Roleplay Chat
+            🔁 Verb Practice
           </Button>
         </Link>
       </div>
@@ -69,6 +57,12 @@ export default function HomePage() {
           </Button>
         </Link>
       </Card>
+
+      <div className="text-center">
+        <Link href="/drill" className="text-xs font-medium text-muted underline">
+          🎯 Speaking Drill (flashcards)
+        </Link>
+      </div>
     </div>
   );
 }

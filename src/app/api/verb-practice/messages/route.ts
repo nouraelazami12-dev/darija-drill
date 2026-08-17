@@ -10,6 +10,7 @@ import {
   verbDrillSystemPrompt,
   verbConversationSystemPrompt,
 } from "@/lib/anthropic";
+import { gradeCombo, pickNextCombo, type DrillVerdict } from "@/lib/verbMastery";
 
 function parseVerbs(json: string): string[] {
   try {
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest) {
     let nextPrompt = "";
 
     const usedPrompts = allHistory.filter((m) => m.role === "assistant").map((m) => m.content);
+    const lastAssistant = [...allHistory].reverse().find((m) => m.role === "assistant");
+    const nextCombo = await pickNextCombo(verbs);
 
     try {
       const anthropic = getAnthropic();
@@ -89,7 +92,7 @@ export async function POST(req: NextRequest) {
         model: ROLEPLAY_MODEL,
         max_tokens: 500,
         thinking: NO_THINKING,
-        system: verbDrillSystemPrompt(verbs, usedPrompts),
+        system: verbDrillSystemPrompt(verbs, nextCombo, usedPrompts),
         tools: [VERB_DRILL_TURN_TOOL],
         tool_choice: { type: "tool", name: "drill_turn" },
         messages: history.map((m) => ({
@@ -114,6 +117,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (lastAssistant?.targetVerb && lastAssistant.targetPerson && verdict) {
+      await gradeCombo(lastAssistant.targetVerb, lastAssistant.targetPerson, verdict as DrillVerdict);
+    }
+
     const assistantMessage = await prisma.verbPracticeMessage.create({
       data: {
         sessionId,
@@ -122,6 +129,8 @@ export async function POST(req: NextRequest) {
         feedback: feedback || null,
         verdict,
         correctAnswer: correctAnswer || null,
+        targetVerb: nextCombo.verb,
+        targetPerson: nextCombo.person,
       },
     });
 

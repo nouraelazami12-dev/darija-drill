@@ -3,6 +3,7 @@ import type { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 import { prisma } from "@/lib/prisma";
 import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, verbDrillSystemPrompt, VERB_DRILL_START_TOOL } from "@/lib/anthropic";
 import { isVerbKey, DEFAULT_VERBS } from "@/lib/verbs";
+import { pickNextCombo } from "@/lib/verbMastery";
 
 function parseVerbs(json: string): string[] {
   try {
@@ -44,12 +45,13 @@ export async function POST(req: NextRequest) {
 
   if (finalMode === "drill") {
     try {
+      const combo = await pickNextCombo(finalVerbs);
       const anthropic = getAnthropic();
       const response = await anthropic.messages.create({
         model: ROLEPLAY_MODEL,
         max_tokens: 500,
         thinking: NO_THINKING,
-        system: verbDrillSystemPrompt(finalVerbs),
+        system: verbDrillSystemPrompt(finalVerbs, combo),
         tools: [VERB_DRILL_START_TOOL],
         tool_choice: { type: "tool", name: "drill_turn" },
         messages: [{ role: "user", content: "Begin the drill with the first prompt." }],
@@ -59,7 +61,13 @@ export async function POST(req: NextRequest) {
       const nextPrompt = input?.next_prompt?.trim();
       if (nextPrompt) {
         await prisma.verbPracticeMessage.create({
-          data: { sessionId: session.id, role: "assistant", content: nextPrompt },
+          data: {
+            sessionId: session.id,
+            role: "assistant",
+            content: nextPrompt,
+            targetVerb: combo.verb,
+            targetPerson: combo.person,
+          },
         });
       }
     } catch {

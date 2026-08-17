@@ -11,3 +11,16 @@ export const DEFAULT_VERBS: VerbKey[] = ["like", "khas", "3nd"];
 export function isVerbKey(value: string): value is VerbKey {
   return VERB_OPTIONS.some((v) => v.key === value);
 }
+
+export type Person = "ana" | "nta" | "nti" | "howa" | "hiya" | "7na" | "ntoma" | "homa";
+
+export const PERSONS: { key: Person; label: string }[] = [
+  { key: "ana", label: "ana (I)" },
+  { key: "nta", label: "nta (you, masc)" },
+  { key: "nti", label: "nti (you, fem)" },
+  { key: "howa", label: "howa (he)" },
+  { key: "hiya", label: "hiya (she)" },
+  { key: "7na", label: "7na (we)" },
+  { key: "ntoma", label: "ntoma (you, plural)" },
+  { key: "homa", label: "homa (they)" },
+];

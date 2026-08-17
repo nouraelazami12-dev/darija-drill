@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Message, Tool } from "@anthropic-ai/sdk/resources/messages";
+import { PERSONS } from "@/lib/verbs";
 
 let client: Anthropic | null = null;
 
@@ -75,6 +76,12 @@ export const ROLEPLAY_TOOL: Tool = {
         description:
           "1-based numbers (from the target phrase list) that the LEARNER successfully and correctly used in their last message, if any.",
       },
+      target_phrases_missed: {
+        type: "array",
+        items: { type: "integer" },
+        description:
+          "1-based numbers (from the target phrase list) that the LEARNER attempted to use in their last message but got wrong (wrong word, wrong conjugation, wrong agreement) — a genuine attempt that didn't land, not just an unrelated mistake. Don't include a number in both target_phrases_used and target_phrases_missed.",
+      },
     },
     required: ["dialogue", "english_translation"],
   },
@@ -135,7 +142,10 @@ Check ONLY the single most recent learner message — the very last user turn �
 
 Never look further back than that one latest message. If an earlier message had a mistake that was already corrected (or never corrected), do not mention it again — even if the learner repeats the same kind of error later, treat each turn as a fresh, independent check. If the latest message was grammatically fine, omit \`correction\` entirely — don't invent something to correct, and don't recycle a previous correction.
 
-Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line, for the learner to optionally reveal. Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
+## Tracking a genuine attempt at a target phrase that didn't land
+If the learner's last message was clearly attempting one of the target phrases specifically (not just any mistake) but got it wrong, report its number in \`target_phrases_missed\` — this is different from a phrase they simply haven't tried yet, which needs no tracking at all.
+
+Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line, for the learner to optionally reveal. Report which target phrases (by number) you modeled this turn, which the learner successfully used in their last message, and which they genuinely attempted but got wrong.`;
 }
 
 const VERB_DESCRIPTIONS: Record<string, string> = {
@@ -148,6 +158,12 @@ function verbListText(verbs: string[]): string {
   return verbs.map((v) => `- ${VERB_DESCRIPTIONS[v] ?? v}`).join("\n");
 }
 
+function personLabel(person: string): string {
+  return PERSONS.find((p) => p.key === person)?.label ?? person;
+}
+
+export type DrillCombo = { verb: string; person: string };
+
 // Used only to generate the very first prompt of a session, before there's any answer to grade.
 export const VERB_DRILL_START_TOOL: Tool = {
   name: "drill_turn",
@@ -157,8 +173,7 @@ export const VERB_DRILL_START_TOOL: Tool = {
     properties: {
       next_prompt: {
         type: "string",
-        description:
-          "The first English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person.",
+        description: "The first English sentence for the learner to translate into Darija.",
       },
     },
     required: ["next_prompt"],
@@ -188,18 +203,21 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
       },
       next_prompt: {
         type: "string",
-        description:
-          "The next English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person — rotate through persons (and tenses, where the verb allows it). Must NOT repeat, or closely reword, any prompt already listed as used this session.",
+        description: "The next English sentence for the learner to translate into Darija.",
       },
     },
     required: ["feedback", "verdict", "next_prompt"],
   },
 };
 
-export function verbDrillSystemPrompt(verbs: string[], usedPrompts: string[] = []): string {
+export function verbDrillSystemPrompt(
+  verbs: string[],
+  targetCombo: DrillCombo,
+  usedPrompts: string[] = []
+): string {
   const usedList =
     usedPrompts.length > 0
-      ? `\n## Prompts already used this session — never repeat these, or a close reword of any of them\n${usedPrompts.map((p) => `- ${p}`).join("\n")}\n`
+      ? `\n## English sentences already used this session — don't reuse the exact same wording, vary the sentence even if it targets the same combo again\n${usedPrompts.map((p) => `- ${p}`).join("\n")}\n`
       : "";
 
   return `You are a Moroccan Darija tutor running a focused conjugation drill over text chat.
@@ -208,14 +226,17 @@ export function verbDrillSystemPrompt(verbs: string[], usedPrompts: string[] = [
 ${verbListText(verbs)}
 
 ## How the drill works
-Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script), built around one of the target verbs conjugated for a specific grammatical person: ana (I), nta (you, masc), nti (you, fem), howa (he), hiya (she), 7na (we), ntoma (you, plural), homa (they). Rotate through persons and — where the verb allows it — tenses (present/habitual, past, future, negative) so the learner gets broad coverage. Never repeat a prompt, or a close reword of one, that's already been used this session — always produce a genuinely new sentence.
+Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script). A combo-picking system outside your control decides which verb and grammatical person to test each turn, prioritizing whatever the learner is currently weakest on — you do not choose this yourself.
+
+## This turn's target
+Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it.
 ${usedList}
 When the learner replies with their attempt, grade it — this is mandatory every single turn, never skip it:
 - "correct": the conjugation, person, and tense are all right (minor Arabizi spelling variation is fine — there's no single standard transliteration).
 - "close": the right idea/verb but a conjugation, agreement, or tense slip.
 - "wrong": wrong verb, or the conjugation doesn't work at all.
 
-Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt in the same turn — don't make the learner ask for it.
+Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt (for this turn's target above) in the same turn — don't make the learner ask for it.
 
 Keep prompts short and concrete — simple, everyday sentences a beginner could plausibly want to say, not abstract or complex constructions.
 
@@ -237,5 +258,5 @@ Use short sentences, common everyday words, and casual texting style — the lea
 ## Correcting mistakes
 Check ONLY the single most recent learner message for genuine grammar or vocabulary mistakes (wrong word, wrong conjugation, wrong agreement) — not style. If you find a real mistake, explain it briefly and kindly in the \`correction\` field, quoting what they said and the fix. Never look further back than the latest message, and don't recycle old corrections. Omit \`correction\` if the message was fine.
 
-Use the respond_in_character tool. Put ONLY your Darija line in \`dialogue\` (Arabizi/Latin script), and a natural English translation in \`english_translation\`. Leave target_phrases_modeled and target_phrases_used empty — they're not used here.`;
+Use the respond_in_character tool. Put ONLY your Darija line in \`dialogue\` (Arabizi/Latin script), and a natural English translation in \`english_translation\`. Leave target_phrases_modeled, target_phrases_used, and target_phrases_missed empty — they're not used here.`;
 }

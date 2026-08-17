@@ -109,9 +109,24 @@ model VerbPracticeMessage {
   feedback      String? // drill mode: feedback on the learner's previous answer
   verdict       String? // drill mode: "correct" | "close" | "wrong"
   correctAnswer String? // drill mode: correct Darija answer, shown when verdict isn't "correct"
+  targetVerb    String? // drill mode, assistant turn: which verb this prompt tested
+  targetPerson  String? // drill mode, assistant turn: which grammatical person this prompt tested
   createdAt     DateTime @default(now())
 
   session VerbPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+model VerbMastery {
+  id         String   @id @default(cuid())
+  verb       String
+  person     String // ana | nta | nti | howa | hiya | 7na | ntoma | homa
+  strength   Int      @default(0) // 0 = weakest/unpracticed, rises on consecutive correct answers, drops on close/wrong
+  attempts   Int      @default(0)
+  correct    Int      @default(0)
+  lastResult String? // "correct" | "close" | "wrong"
+  updatedAt  DateTime @updatedAt
+
+  @@unique([verb, person])
 }
