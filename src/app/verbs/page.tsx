@@ -79,6 +79,7 @@ export default function VerbPracticePage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hideVerbs, setHideVerbs] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -225,6 +226,13 @@ export default function VerbPracticePage() {
           >
             🔄 New session
           </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setHideVerbs((h) => !h)}
+            className="!px-3 !py-1.5 text-xs"
+          >
+            {hideVerbs ? "👁️ Show verbs" : "🙈 Hide verbs"}
+          </Button>
         </div>
       </div>
 
@@ -260,17 +268,23 @@ export default function VerbPracticePage() {
       )}
 
       <div className="mb-2 flex flex-wrap gap-1.5">
-        {session.verbs.map((v) => {
-          const opt = VERB_OPTIONS.find((o) => o.key === v);
-          return (
-            <span
-              key={v}
-              className="rounded-full bg-border/60 px-2 py-1 text-xs font-medium text-foreground"
-            >
-              {opt?.label ?? v}
-            </span>
-          );
-        })}
+        {hideVerbs ? (
+          <span className="rounded-full bg-border/60 px-2 py-1 text-xs font-medium text-muted">
+            Verbs hidden
+          </span>
+        ) : (
+          session.verbs.map((v) => {
+            const opt = VERB_OPTIONS.find((o) => o.key === v);
+            return (
+              <span
+                key={v}
+                className="rounded-full bg-border/60 px-2 py-1 text-xs font-medium text-foreground"
+              >
+                {opt?.label ?? v}
+              </span>
+            );
+          })
+        )}
         <span className="rounded-full bg-accent/15 px-2 py-1 text-xs font-medium text-accent">
           {session.mode === "drill" ? "Drill mode" : "Conversation mode"}
         </span>

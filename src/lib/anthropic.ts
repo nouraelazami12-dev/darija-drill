@@ -148,54 +148,74 @@ function verbListText(verbs: string[]): string {
   return verbs.map((v) => `- ${VERB_DESCRIPTIONS[v] ?? v}`).join("\n");
 }
 
-export const VERB_DRILL_TOOL: Tool = {
+// Used only to generate the very first prompt of a session, before there's any answer to grade.
+export const VERB_DRILL_START_TOOL: Tool = {
   name: "drill_turn",
-  description: "Grade the learner's previous answer (if any) and give the next drill prompt.",
+  description: "Give the first drill prompt.",
   input_schema: {
     type: "object",
     properties: {
-      feedback: {
-        type: "string",
-        description:
-          "Brief, encouraging feedback on the learner's most recent answer. Leave empty if this is the very first prompt of the session (no answer yet to grade).",
-      },
-      verdict: {
-        type: "string",
-        enum: ["correct", "close", "wrong"],
-        description: "Grade for the learner's most recent answer. Omit if this is the first prompt.",
-      },
-      correct_answer: {
-        type: "string",
-        description:
-          "The correct Darija answer (Arabizi) for the question just graded. Omit if this is the first prompt, or if the learner got it fully correct.",
-      },
       next_prompt: {
         type: "string",
         description:
-          "The next English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person — rotate through persons (and tenses, where the verb allows it) so the same combination doesn't repeat back-to-back.",
+          "The first English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person.",
       },
     },
     required: ["next_prompt"],
   },
 };
 
-export function verbDrillSystemPrompt(verbs: string[]): string {
+// Used for every turn after the first, where there's always a learner answer to grade.
+export const VERB_DRILL_TURN_TOOL: Tool = {
+  name: "drill_turn",
+  description: "Grade the learner's previous answer and give the next drill prompt.",
+  input_schema: {
+    type: "object",
+    properties: {
+      feedback: {
+        type: "string",
+        description: "Brief, encouraging feedback on the learner's most recent answer.",
+      },
+      verdict: {
+        type: "string",
+        enum: ["correct", "close", "wrong"],
+        description: "Grade for the learner's most recent answer.",
+      },
+      correct_answer: {
+        type: "string",
+        description:
+          "The correct Darija answer (Arabizi) for the question just graded. Omit only if the learner got it fully correct.",
+      },
+      next_prompt: {
+        type: "string",
+        description:
+          "The next English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person — rotate through persons (and tenses, where the verb allows it). Must NOT repeat, or closely reword, any prompt already listed as used this session.",
+      },
+    },
+    required: ["feedback", "verdict", "next_prompt"],
+  },
+};
+
+export function verbDrillSystemPrompt(verbs: string[], usedPrompts: string[] = []): string {
+  const usedList =
+    usedPrompts.length > 0
+      ? `\n## Prompts already used this session — never repeat these, or a close reword of any of them\n${usedPrompts.map((p) => `- ${p}`).join("\n")}\n`
+      : "";
+
   return `You are a Moroccan Darija tutor running a focused conjugation drill over text chat.
 
 ## Target verbs for this session
 ${verbListText(verbs)}
 
 ## How the drill works
-Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script), built around one of the target verbs conjugated for a specific grammatical person: ana (I), nta (you, masc), nti (you, fem), howa (he), hiya (she), 7na (we), ntoma (you, plural), homa (they). Rotate through persons and — where the verb allows it — tenses (present/habitual, past, future, negative) so the learner gets broad coverage. Don't repeat the same verb+person+tense combination twice in a row.
-
-When the learner replies with their attempt, grade it:
+Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script), built around one of the target verbs conjugated for a specific grammatical person: ana (I), nta (you, masc), nti (you, fem), howa (he), hiya (she), 7na (we), ntoma (you, plural), homa (they). Rotate through persons and — where the verb allows it — tenses (present/habitual, past, future, negative) so the learner gets broad coverage. Never repeat a prompt, or a close reword of one, that's already been used this session — always produce a genuinely new sentence.
+${usedList}
+When the learner replies with their attempt, grade it — this is mandatory every single turn, never skip it:
 - "correct": the conjugation, person, and tense are all right (minor Arabizi spelling variation is fine — there's no single standard transliteration).
 - "close": the right idea/verb but a conjugation, agreement, or tense slip.
 - "wrong": wrong verb, or the conjugation doesn't work at all.
 
-Give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt in the same turn — don't make the learner ask for it.
-
-For the very first turn of a session (no learner answer yet), leave feedback/verdict/correct_answer empty and just give the first prompt.
+Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt in the same turn — don't make the learner ask for it.
 
 Keep prompts short and concrete — simple, everyday sentences a beginner could plausibly want to say, not abstract or complex constructions.
 

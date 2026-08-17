@@ -5,7 +5,7 @@ import {
   getAnthropic,
   ROLEPLAY_MODEL,
   ROLEPLAY_TOOL,
-  VERB_DRILL_TOOL,
+  VERB_DRILL_TURN_TOOL,
   NO_THINKING,
   verbDrillSystemPrompt,
   verbConversationSystemPrompt,
@@ -18,6 +18,24 @@ function parseVerbs(json: string): string[] {
   } catch {
     return [];
   }
+}
+
+// Assistant turns are shown to the learner as separate feedback/verdict/next-prompt pieces,
+// but the model only ever sees plain conversation text — reconstruct the full turn here so it
+// remembers what it already graded and asked, instead of just the bare next_prompt.
+function formatAssistantTurn(m: {
+  content: string;
+  feedback: string | null;
+  verdict: string | null;
+  correctAnswer: string | null;
+}): string {
+  if (!m.feedback && !m.verdict) return m.content;
+  const verdictLabel =
+    m.verdict === "correct" ? "Correct." : m.verdict === "close" ? "Close." : m.verdict === "wrong" ? "Wrong." : "";
+  const parts = [verdictLabel, m.feedback ?? ""].filter(Boolean);
+  if (m.correctAnswer) parts.push(`Correct answer: ${m.correctAnswer}.`);
+  parts.push(m.content);
+  return parts.join(" ");
 }
 
 export async function GET(req: NextRequest) {
@@ -63,18 +81,20 @@ export async function POST(req: NextRequest) {
     let correctAnswer = "";
     let nextPrompt = "";
 
+    const usedPrompts = allHistory.filter((m) => m.role === "assistant").map((m) => m.content);
+
     try {
       const anthropic = getAnthropic();
       const response = await anthropic.messages.create({
         model: ROLEPLAY_MODEL,
         max_tokens: 500,
         thinking: NO_THINKING,
-        system: verbDrillSystemPrompt(verbs),
-        tools: [VERB_DRILL_TOOL],
+        system: verbDrillSystemPrompt(verbs, usedPrompts),
+        tools: [VERB_DRILL_TURN_TOOL],
         tool_choice: { type: "tool", name: "drill_turn" },
         messages: history.map((m) => ({
           role: m.role === "user" ? "user" : "assistant",
-          content: m.content,
+          content: m.role === "assistant" ? formatAssistantTurn(m) : m.content,
         })),
       });
 

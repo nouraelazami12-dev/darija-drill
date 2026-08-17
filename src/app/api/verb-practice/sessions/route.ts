@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 import { prisma } from "@/lib/prisma";
-import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, verbDrillSystemPrompt, VERB_DRILL_TOOL } from "@/lib/anthropic";
+import { getAnthropic, ROLEPLAY_MODEL, NO_THINKING, verbDrillSystemPrompt, VERB_DRILL_START_TOOL } from "@/lib/anthropic";
 import { isVerbKey, DEFAULT_VERBS } from "@/lib/verbs";
 
 function parseVerbs(json: string): string[] {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         max_tokens: 500,
         thinking: NO_THINKING,
         system: verbDrillSystemPrompt(finalVerbs),
-        tools: [VERB_DRILL_TOOL],
+        tools: [VERB_DRILL_START_TOOL],
         tool_choice: { type: "tool", name: "drill_turn" },
         messages: [{ role: "user", content: "Begin the drill with the first prompt." }],
       });
