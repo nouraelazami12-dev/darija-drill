@@ -24,7 +24,7 @@ export default function HomePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">Darija Drill</h1>
+        <h1 className="text-2xl font-bold">Learn Darija</h1>
         <p className="text-sm text-muted">Keep the momentum going between classes.</p>
       </div>
 

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Darija Drill",
+  title: "Learn Darija",
   description: "Practice speaking Moroccan Darija between classes.",
 };
 

@@ -1,4 +1,4 @@
-# Darija Drill
+# Learn Darija
 
 A personal Moroccan Darija speaking-practice app: log phrases after class, drill them with spaced repetition, practice live conversations with an LLM roleplay partner, and import new vocabulary straight from class slides or transcripts.
 
