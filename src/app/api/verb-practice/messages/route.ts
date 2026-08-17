@@ -11,6 +11,7 @@ import {
   verbConversationSystemPrompt,
 } from "@/lib/anthropic";
 import { gradeCombo, pickNextCombo, type DrillVerdict } from "@/lib/verbMastery";
+import { recordPracticeToday } from "@/lib/streak";
 
 function parseVerbs(json: string): string[] {
   try {
@@ -134,6 +135,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await recordPracticeToday();
+
     return NextResponse.json({ userMessage, assistantMessage });
   }
 
@@ -180,6 +183,8 @@ export async function POST(req: NextRequest) {
       correction: correction || null,
     },
   });
+
+  await recordPracticeToday();
 
   return NextResponse.json({ userMessage, assistantMessage });
 }
