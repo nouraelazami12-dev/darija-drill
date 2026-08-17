@@ -8,6 +8,7 @@ const TABS = [
   { href: "/phrases", label: "Phrases", icon: "📚" },
   { href: "/drill", label: "Drill", icon: "🎯" },
   { href: "/roleplay", label: "Roleplay", icon: "💬" },
+  { href: "/verbs", label: "Verbs", icon: "🔁" },
   { href: "/translate", label: "Translate", icon: "🔤" },
 ];
 

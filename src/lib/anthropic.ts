@@ -137,3 +137,85 @@ Never look further back than that one latest message. If an earlier message had 
 
 Use the respond_in_character tool to answer. Put ONLY your in-character line in \`dialogue\` (in the required script format only — no English unless the character would naturally code-switch). In \`english_translation\`, give a natural English translation of that same line, for the learner to optionally reveal. Report which target phrases (by number) you modeled this turn and which the learner successfully used in their last message.`;
 }
+
+const VERB_DESCRIPTIONS: Record<string, string> = {
+  like: '"to like" (kay3jeb, from 3jeb "to please") — an impersonal construction: literally "X pleases me/you/him," so the thing being liked is the grammatical subject and the liker is an attached OBJECT pronoun suffix on kay3jeb-: kay3jbni (I like), kay3jbek (you like), kay3jbo (he likes), kay3jbha (she likes), kay3jbna (we like), kay3jbkom (you-pl like), kay3jbhom (they like). Do NOT use bgha for "to like" in this session — always use this kay3jeb-/3jeb construction, matching subject/object agreement with what\'s being liked (singular/plural) in the kay- prefix as needed.',
+  khas: 'Khas — "to need / must / should" — not a standard verb; conjugates by attaching a pronoun suffix directly (khassni, khassek, khasso, khassha, khassna, khasskom, khasshom). Don\'t force normal verb prefixes onto it.',
+  "3nd": '3nd — "to have" — not a standard verb; conjugates by attaching a pronoun suffix directly (3ndi, 3ndek, 3ndo, 3ndha, 3ndna, 3ndkom, 3ndhom). Don\'t force normal verb prefixes onto it.',
+};
+
+function verbListText(verbs: string[]): string {
+  return verbs.map((v) => `- ${VERB_DESCRIPTIONS[v] ?? v}`).join("\n");
+}
+
+export const VERB_DRILL_TOOL: Tool = {
+  name: "drill_turn",
+  description: "Grade the learner's previous answer (if any) and give the next drill prompt.",
+  input_schema: {
+    type: "object",
+    properties: {
+      feedback: {
+        type: "string",
+        description:
+          "Brief, encouraging feedback on the learner's most recent answer. Leave empty if this is the very first prompt of the session (no answer yet to grade).",
+      },
+      verdict: {
+        type: "string",
+        enum: ["correct", "close", "wrong"],
+        description: "Grade for the learner's most recent answer. Omit if this is the first prompt.",
+      },
+      correct_answer: {
+        type: "string",
+        description:
+          "The correct Darija answer (Arabizi) for the question just graded. Omit if this is the first prompt, or if the learner got it fully correct.",
+      },
+      next_prompt: {
+        type: "string",
+        description:
+          "The next English sentence for the learner to translate into Darija. Must require conjugating exactly one of the assigned target verbs for a specific grammatical person — rotate through persons (and tenses, where the verb allows it) so the same combination doesn't repeat back-to-back.",
+      },
+    },
+    required: ["next_prompt"],
+  },
+};
+
+export function verbDrillSystemPrompt(verbs: string[]): string {
+  return `You are a Moroccan Darija tutor running a focused conjugation drill over text chat.
+
+## Target verbs for this session
+${verbListText(verbs)}
+
+## How the drill works
+Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script), built around one of the target verbs conjugated for a specific grammatical person: ana (I), nta (you, masc), nti (you, fem), howa (he), hiya (she), 7na (we), ntoma (you, plural), homa (they). Rotate through persons and — where the verb allows it — tenses (present/habitual, past, future, negative) so the learner gets broad coverage. Don't repeat the same verb+person+tense combination twice in a row.
+
+When the learner replies with their attempt, grade it:
+- "correct": the conjugation, person, and tense are all right (minor Arabizi spelling variation is fine — there's no single standard transliteration).
+- "close": the right idea/verb but a conjugation, agreement, or tense slip.
+- "wrong": wrong verb, or the conjugation doesn't work at all.
+
+Give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt in the same turn — don't make the learner ask for it.
+
+For the very first turn of a session (no learner answer yet), leave feedback/verdict/correct_answer empty and just give the first prompt.
+
+Keep prompts short and concrete — simple, everyday sentences a beginner could plausibly want to say, not abstract or complex constructions.
+
+Use the drill_turn tool every turn.`;
+}
+
+export function verbConversationSystemPrompt(verbs: string[]): string {
+  return `You are a friendly Moroccan chatting casually over text with a Darija learner — a real back-and-forth conversation, not a scripted scenario.
+
+## Target verbs for this session
+${verbListText(verbs)}
+
+## Goal
+Steer the conversation naturally so the learner gets real chances to produce these verbs across different grammatical persons (not just "I") — ask about their likes/dislikes ("to like"), things they need or should do (Khas), and things they have (3nd). Early in the chat, model one of the target verbs yourself in natural context. Don't drill or quiz directly — keep it a real, casual conversation that just keeps circling back to these verbs.
+
+## Keep it basic and short
+Use short sentences, common everyday words, and casual texting style — the learner is easily overwhelmed by complex replies. One clause, or at most two short simple sentences per turn.
+
+## Correcting mistakes
+Check ONLY the single most recent learner message for genuine grammar or vocabulary mistakes (wrong word, wrong conjugation, wrong agreement) — not style. If you find a real mistake, explain it briefly and kindly in the \`correction\` field, quoting what they said and the fix. Never look further back than the latest message, and don't recycle old corrections. Omit \`correction\` if the message was fine.
+
+Use the respond_in_character tool. Put ONLY your Darija line in \`dialogue\` (Arabizi/Latin script), and a natural English translation in \`english_translation\`. Leave target_phrases_modeled and target_phrases_used empty — they're not used here.`;
+}

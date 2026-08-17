@@ -89,3 +89,29 @@ model ChatMessage {
   @@index([scenarioId])
   @@index([sessionId])
 }
+
+model VerbPracticeSession {
+  id        String   @id @default(cuid())
+  verbs     String // JSON array of verb keys, e.g. ["like","khas","3nd"]
+  mode      String // "drill" | "conversation"
+  createdAt DateTime @default(now())
+
+  messages VerbPracticeMessage[]
+}
+
+model VerbPracticeMessage {
+  id            String   @id @default(cuid())
+  sessionId     String
+  role          String // "user" | "assistant"
+  content       String
+  translation   String? // conversation mode: English translation of the assistant's line
+  correction    String? // conversation mode: correction of the learner's last message
+  feedback      String? // drill mode: feedback on the learner's previous answer
+  verdict       String? // drill mode: "correct" | "close" | "wrong"
+  correctAnswer String? // drill mode: correct Darija answer, shown when verdict isn't "correct"
+  createdAt     DateTime @default(now())
+
+  session VerbPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}

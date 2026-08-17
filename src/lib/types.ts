@@ -41,6 +41,28 @@ export type RoleplaySession = {
   createdAt: string;
 };
 
+export type VerbPracticeMode = "drill" | "conversation";
+
+export type VerbPracticeMessage = {
+  id: string;
+  sessionId: string;
+  role: "user" | "assistant";
+  content: string;
+  translation: string | null;
+  correction: string | null;
+  feedback: string | null;
+  verdict: "correct" | "close" | "wrong" | null;
+  correctAnswer: string | null;
+  createdAt: string;
+};
+
+export type VerbPracticeSession = {
+  id: string;
+  verbs: string[];
+  mode: VerbPracticeMode;
+  createdAt: string;
+};
+
 export type ExtractedPhrase = {
   darijaArabic?: string;
   darijaLatin: string;
