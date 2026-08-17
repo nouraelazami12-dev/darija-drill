@@ -47,7 +47,7 @@ export async function POST(
     return NextResponse.json({ error: "audio file is required" }, { status: 400 });
   }
 
-  const ext = EXTENSION_BY_MIME[file.type] ?? path.extname(file.name).replace(".", "") ?? "webm";
+  const ext = EXTENSION_BY_MIME[file.type] || path.extname(file.name).replace(".", "") || "webm";
   const buffer = Buffer.from(await file.arrayBuffer());
 
   await fs.mkdir(AUDIO_DIR, { recursive: true });

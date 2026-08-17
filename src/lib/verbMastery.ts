@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { PERSONS, type Person } from "@/lib/verbs";
+import { PERSONS, DEFAULT_VERBS, type Person } from "@/lib/verbs";
 
 const MAX_STRENGTH = 5;
 const CANDIDATE_POOL_SIZE = 4;
@@ -32,8 +32,9 @@ export async function gradeCombo(verb: string, person: string, verdict: DrillVer
 // Pick the next (verb, person) combo to drill: weighted toward weakest and least-recently-seen,
 // with light randomness among the bottom few so it doesn't robotically hammer a single worst combo.
 export async function pickNextCombo(
-  verbs: string[]
+  verbsInput: string[]
 ): Promise<{ verb: string; person: Person }> {
+  const verbs = verbsInput.length > 0 ? verbsInput : DEFAULT_VERBS;
   const rows = await prisma.verbMastery.findMany({ where: { verb: { in: verbs } } });
   const byKey = new Map(rows.map((r) => [`${r.verb}:${r.person}`, r]));
 

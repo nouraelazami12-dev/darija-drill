@@ -165,6 +165,8 @@ export default function VerbPracticePage() {
     setSending(false);
 
     if (!res.ok) {
+      setMessages((prev) => prev.filter((m) => !m.id.startsWith("tmp-")));
+      setInput(text);
       setError(data.error ?? "Something went wrong");
       return;
     }

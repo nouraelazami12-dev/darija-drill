@@ -56,6 +56,9 @@ function PhrasesPageInner() {
     if (res.status === 409) {
       return { duplicate: data.duplicate };
     }
+    if (!res.ok) {
+      return { error: data.error ?? "Something went wrong — try again." };
+    }
     setPhrases((prev) => [data, ...prev]);
     setShowForm(false);
   };
@@ -73,6 +76,9 @@ function PhrasesPageInner() {
     const data = await res.json();
     if (res.status === 409) {
       return { duplicate: data.duplicate };
+    }
+    if (!res.ok) {
+      return { error: data.error ?? "Something went wrong — try again." };
     }
     setPhrases((prev) => prev.map((p) => (p.id === id ? data : p)));
   };

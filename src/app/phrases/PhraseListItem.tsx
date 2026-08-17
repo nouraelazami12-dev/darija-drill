@@ -34,7 +34,7 @@ export default function PhraseListItem({
           submitLabel="Save changes"
           onSubmit={async (values, force) => {
             const result = await onUpdate(phrase.id, values, force);
-            if (!result?.duplicate) {
+            if (!result?.duplicate && !result?.error) {
               setEditing(false);
             }
             return result;

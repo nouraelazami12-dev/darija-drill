@@ -12,7 +12,7 @@ export type PhraseFormValues = {
 };
 
 export type DuplicateInfo = { darijaLatin: string; english: string };
-export type SubmitResult = { duplicate?: DuplicateInfo } | void;
+export type SubmitResult = { duplicate?: DuplicateInfo; error?: string } | void;
 
 const EMPTY: PhraseFormValues = {
   darijaArabic: "",
@@ -63,6 +63,10 @@ export default function PhraseForm({
         setDuplicate(result.duplicate);
         return;
       }
+      if (result?.error) {
+        setValidationError(result.error);
+        return;
+      }
       setDuplicate(null);
       if (!initial) setValues(EMPTY);
     } finally {
@@ -73,7 +77,12 @@ export default function PhraseForm({
   const addAnyway = async () => {
     setSaving(true);
     try {
-      await onSubmit(values, true);
+      const result = await onSubmit(values, true);
+      if (result?.error) {
+        setDuplicate(null);
+        setValidationError(result.error);
+        return;
+      }
       setDuplicate(null);
       if (!initial) setValues(EMPTY);
     } finally {
