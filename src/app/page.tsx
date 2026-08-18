@@ -57,12 +57,6 @@ export default function HomePage() {
           </Button>
         </Link>
       </Card>
-
-      <div className="text-center">
-        <Link href="/drill" className="text-xs font-medium text-muted underline">
-          🎯 Speaking Drill (flashcards)
-        </Link>
-      </div>
     </div>
   );
 }
