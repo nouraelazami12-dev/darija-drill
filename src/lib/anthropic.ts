@@ -164,6 +164,20 @@ function personLabel(person: string): string {
 
 export type DrillCombo = { verb: string; person: string };
 
+const VOCAB_HINTS_PROPERTY = {
+  type: "array" as const,
+  items: {
+    type: "object" as const,
+    properties: {
+      english: { type: "string" as const, description: "The English word, lowercase, as it appears in next_prompt." },
+      darija: { type: "string" as const, description: "Its Darija translation (Arabizi)." },
+    },
+    required: ["english", "darija"],
+  },
+  description:
+    "Darija (Arabizi) translations for the key content nouns in next_prompt — e.g. for \"I like this food,\" include food -> makla. Do NOT include the target verb itself (that has its own hint) or basic pronouns. Keep to the 1-3 most useful words; omit entirely if next_prompt has no meaningful extra vocabulary.",
+};
+
 // Used only to generate the very first prompt of a session, before there's any answer to grade.
 export const VERB_DRILL_START_TOOL: Tool = {
   name: "drill_turn",
@@ -175,6 +189,7 @@ export const VERB_DRILL_START_TOOL: Tool = {
         type: "string",
         description: "The first English sentence for the learner to translate into Darija.",
       },
+      vocab_hints: VOCAB_HINTS_PROPERTY,
     },
     required: ["next_prompt"],
   },
@@ -205,6 +220,7 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
         type: "string",
         description: "The next English sentence for the learner to translate into Darija.",
       },
+      vocab_hints: VOCAB_HINTS_PROPERTY,
     },
     required: ["feedback", "verdict", "next_prompt"],
   },
@@ -239,6 +255,9 @@ When the learner replies with their attempt, grade it — this is mandatory ever
 Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt (for this turn's target above) in the same turn — don't make the learner ask for it.
 
 Keep prompts short and concrete — simple, everyday sentences a beginner could plausibly want to say, not abstract or complex constructions.
+
+## Vocabulary hints
+The learner can optionally reveal Darija translations for the key nouns in your next_prompt (separately from the verb conjugation, which they can also reveal on their own). Populate \`vocab_hints\` with the 1-3 most useful content words from next_prompt and their Darija translations, so they're not blocked by unrelated vocabulary — never include the target verb itself there.
 
 Use the drill_turn tool every turn.`;
 }

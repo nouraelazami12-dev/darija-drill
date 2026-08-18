@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { VerbPracticeMessage, VerbPracticeMode } from "@/lib/types";
+import { VERB_CONJUGATIONS, PERSONS, VERB_OPTIONS, isVerbKey } from "@/lib/verbs";
 
 const VERDICT_STYLE: Record<string, string> = {
   correct: "border-success/40 bg-success/10 text-success",
@@ -15,6 +16,26 @@ const VERDICT_LABEL: Record<string, string> = {
   wrong: "❌ Not quite",
 };
 
+function VerbConjugationHint({ verb }: { verb: string }) {
+  if (!isVerbKey(verb)) return null;
+  const table = VERB_CONJUGATIONS[verb];
+  const label = VERB_OPTIONS.find((v) => v.key === verb)?.label ?? verb;
+
+  return (
+    <div className="rounded-xl bg-border/40 px-3 py-2 text-xs text-foreground">
+      <p className="mb-1 font-semibold">{label} — present tense</p>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+        {PERSONS.map((p) => (
+          <p key={p.key}>
+            <span className="text-muted">{p.label}: </span>
+            {table[p.key]}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function VerbChatBubble({
   message,
   mode,
@@ -23,6 +44,8 @@ export default function VerbChatBubble({
   mode: VerbPracticeMode;
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
+  const [showVerbHint, setShowVerbHint] = useState(false);
+  const [showWordHints, setShowWordHints] = useState(false);
   const isUser = message.role === "user";
 
   return (
@@ -45,6 +68,37 @@ export default function VerbChatBubble({
       >
         {message.content}
       </div>
+      {!isUser && mode === "drill" && message.targetVerb && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowVerbHint((s) => !s)}
+            className="px-1 text-xs font-medium text-muted underline"
+          >
+            {showVerbHint ? "Hide verb hint" : "💡 Verb hint"}
+          </button>
+          {message.vocabHints && message.vocabHints.length > 0 && (
+            <button
+              onClick={() => setShowWordHints((s) => !s)}
+              className="px-1 text-xs font-medium text-muted underline"
+            >
+              {showWordHints ? "Hide word hints" : "📖 Word hints"}
+            </button>
+          )}
+        </div>
+      )}
+      {!isUser && mode === "drill" && showVerbHint && message.targetVerb && (
+        <VerbConjugationHint verb={message.targetVerb} />
+      )}
+      {!isUser && mode === "drill" && showWordHints && message.vocabHints && (
+        <div className="rounded-xl bg-border/40 px-3 py-2 text-xs text-foreground">
+          {message.vocabHints.map((h, i) => (
+            <p key={i}>
+              <span className="text-muted">{h.english}: </span>
+              {h.darija}
+            </p>
+          ))}
+        </div>
+      )}
       {!isUser && mode === "conversation" && message.correction && (
         <p className="rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground">
           <span className="font-semibold text-warning">Correction: </span>

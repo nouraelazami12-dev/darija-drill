@@ -152,6 +152,9 @@ export default function VerbPracticePage() {
         feedback: null,
         verdict: null,
         correctAnswer: null,
+        targetVerb: null,
+        targetPerson: null,
+        vocabHints: null,
         createdAt: new Date().toISOString(),
       },
     ]);

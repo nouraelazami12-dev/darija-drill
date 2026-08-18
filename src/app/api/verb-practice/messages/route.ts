@@ -22,6 +22,22 @@ function parseVerbs(json: string): string[] {
   }
 }
 
+type VocabHint = { english: string; darija: string };
+
+function parseVocabHints(json: string | null): VocabHint[] | null {
+  if (!json) return null;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function serializeMessage<T extends { vocabHints: string | null }>(m: T) {
+  return { ...m, vocabHints: parseVocabHints(m.vocabHints) };
+}
+
 // Assistant turns are shown to the learner as separate feedback/verdict/next-prompt pieces,
 // but the model only ever sees plain conversation text — reconstruct the full turn here so it
 // remembers what it already graded and asked, instead of just the bare next_prompt.
@@ -49,7 +65,7 @@ export async function GET(req: NextRequest) {
     where: { sessionId },
     orderBy: { createdAt: "asc" },
   });
-  return NextResponse.json(messages);
+  return NextResponse.json(messages.map(serializeMessage));
 }
 
 export async function POST(req: NextRequest) {
@@ -82,6 +98,7 @@ export async function POST(req: NextRequest) {
     let verdict: string | null = null;
     let correctAnswer = "";
     let nextPrompt = "";
+    let vocabHints: VocabHint[] = [];
 
     const usedPrompts = allHistory.filter((m) => m.role === "assistant").map((m) => m.content);
     const lastAssistant = [...allHistory].reverse().find((m) => m.role === "assistant");
@@ -104,13 +121,20 @@ export async function POST(req: NextRequest) {
 
       const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
       const input = toolUse?.input as
-        | { feedback?: string; verdict?: string; correct_answer?: string; next_prompt?: string }
+        | {
+            feedback?: string;
+            verdict?: string;
+            correct_answer?: string;
+            next_prompt?: string;
+            vocab_hints?: VocabHint[];
+          }
         | undefined;
 
       feedback = input?.feedback ?? "";
       verdict = input?.verdict ?? null;
       correctAnswer = input?.correct_answer ?? "";
       nextPrompt = input?.next_prompt ?? "";
+      vocabHints = Array.isArray(input?.vocab_hints) ? input.vocab_hints : [];
     } catch (err) {
       return NextResponse.json(
         { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
@@ -132,12 +156,13 @@ export async function POST(req: NextRequest) {
         correctAnswer: correctAnswer || null,
         targetVerb: nextCombo.verb,
         targetPerson: nextCombo.person,
+        vocabHints: vocabHints.length > 0 ? JSON.stringify(vocabHints) : null,
       },
     });
 
     await recordPracticeToday();
 
-    return NextResponse.json({ userMessage, assistantMessage });
+    return NextResponse.json({ userMessage: serializeMessage(userMessage), assistantMessage: serializeMessage(assistantMessage) });
   }
 
   let dialogue = "";
@@ -186,5 +211,5 @@ export async function POST(req: NextRequest) {
 
   await recordPracticeToday();
 
-  return NextResponse.json({ userMessage, assistantMessage });
+  return NextResponse.json({ userMessage: serializeMessage(userMessage), assistantMessage: serializeMessage(assistantMessage) });
 }

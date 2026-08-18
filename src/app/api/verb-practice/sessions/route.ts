@@ -57,8 +57,11 @@ export async function POST(req: NextRequest) {
         messages: [{ role: "user", content: "Begin the drill with the first prompt." }],
       });
       const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
-      const input = toolUse?.input as { next_prompt?: string } | undefined;
+      const input = toolUse?.input as
+        | { next_prompt?: string; vocab_hints?: { english: string; darija: string }[] }
+        | undefined;
       const nextPrompt = input?.next_prompt?.trim();
+      const vocabHints = Array.isArray(input?.vocab_hints) ? input.vocab_hints : [];
       if (nextPrompt) {
         await prisma.verbPracticeMessage.create({
           data: {
@@ -67,6 +70,7 @@ export async function POST(req: NextRequest) {
             content: nextPrompt,
             targetVerb: combo.verb,
             targetPerson: combo.person,
+            vocabHints: vocabHints.length > 0 ? JSON.stringify(vocabHints) : null,
           },
         });
       }

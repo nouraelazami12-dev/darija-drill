@@ -43,6 +43,8 @@ export type RoleplaySession = {
 
 export type VerbPracticeMode = "drill" | "conversation";
 
+export type VocabHint = { english: string; darija: string };
+
 export type VerbPracticeMessage = {
   id: string;
   sessionId: string;
@@ -53,6 +55,9 @@ export type VerbPracticeMessage = {
   feedback: string | null;
   verdict: "correct" | "close" | "wrong" | null;
   correctAnswer: string | null;
+  targetVerb: string | null;
+  targetPerson: string | null;
+  vocabHints: VocabHint[] | null;
   createdAt: string;
 };
 
