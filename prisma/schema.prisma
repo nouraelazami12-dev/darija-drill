@@ -112,6 +112,7 @@ model VerbPracticeMessage {
   targetVerb    String? // drill mode, assistant turn: which verb this prompt tested
   targetPerson  String? // drill mode, assistant turn: which grammatical person this prompt tested
   vocabHints    String? // drill mode, assistant turn: JSON array of {english, darija} for key nouns in next_prompt
+  verbHint      String? // drill mode, assistant turn: JSON {tense, forms: [{person, form}]} matching next_prompt's tense
   createdAt     DateTime @default(now())
 
   session VerbPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)

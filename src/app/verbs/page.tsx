@@ -155,6 +155,7 @@ export default function VerbPracticePage() {
         targetVerb: null,
         targetPerson: null,
         vocabHints: null,
+        verbHint: null,
         createdAt: new Date().toISOString(),
       },
     ]);

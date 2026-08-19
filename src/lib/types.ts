@@ -45,6 +45,8 @@ export type VerbPracticeMode = "drill" | "conversation";
 
 export type VocabHint = { english: string; darija: string };
 
+export type VerbConjugationHint = { tense: string; forms: { person: string; form: string }[] };
+
 export type VerbPracticeMessage = {
   id: string;
   sessionId: string;
@@ -58,6 +60,7 @@ export type VerbPracticeMessage = {
   targetVerb: string | null;
   targetPerson: string | null;
   vocabHints: VocabHint[] | null;
+  verbHint: VerbConjugationHint | null;
   createdAt: string;
 };
 

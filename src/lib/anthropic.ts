@@ -178,6 +178,35 @@ const VOCAB_HINTS_PROPERTY = {
     "Darija (Arabizi) translations for the key content nouns in next_prompt — e.g. for \"I like this food,\" include food -> makla. Do NOT include the target verb itself (that has its own hint) or basic pronouns. Keep to the 1-3 most useful words; omit entirely if next_prompt has no meaningful extra vocabulary.",
 };
 
+const VERB_CONJUGATION_HINT_PROPERTY = {
+  type: "object" as const,
+  properties: {
+    tense: {
+      type: "string" as const,
+      enum: ["present", "past", "future", "negative"],
+      description: "The tense/form you actually used for the target verb in next_prompt.",
+    },
+    forms: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          person: {
+            type: "string" as const,
+            enum: PERSONS.map((p) => p.key),
+          },
+          form: { type: "string" as const, description: "The conjugated Darija form (Arabizi) for this person, in the same tense." },
+        },
+        required: ["person", "form"],
+      },
+      description: "The target verb conjugated for all 8 persons (ana, nta, nti, howa, hiya, 7na, ntoma, homa), in that order, all in the same tense as next_prompt.",
+    },
+  },
+  required: ["tense", "forms"],
+  description:
+    "The full conjugation of the target verb, in the EXACT SAME tense/form you used in next_prompt, across all 8 grammatical persons — lets the learner check the pattern without being told their specific answer.",
+};
+
 // Used only to generate the very first prompt of a session, before there's any answer to grade.
 export const VERB_DRILL_START_TOOL: Tool = {
   name: "drill_turn",
@@ -190,8 +219,9 @@ export const VERB_DRILL_START_TOOL: Tool = {
         description: "The first English sentence for the learner to translate into Darija.",
       },
       vocab_hints: VOCAB_HINTS_PROPERTY,
+      verb_conjugation_hint: VERB_CONJUGATION_HINT_PROPERTY,
     },
-    required: ["next_prompt"],
+    required: ["next_prompt", "verb_conjugation_hint"],
   },
 };
 
@@ -221,8 +251,9 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
         description: "The next English sentence for the learner to translate into Darija.",
       },
       vocab_hints: VOCAB_HINTS_PROPERTY,
+      verb_conjugation_hint: VERB_CONJUGATION_HINT_PROPERTY,
     },
-    required: ["feedback", "verdict", "next_prompt"],
+    required: ["feedback", "verdict", "next_prompt", "verb_conjugation_hint"],
   },
 };
 
@@ -258,6 +289,9 @@ Keep prompts short and concrete — simple, everyday sentences a beginner could 
 
 ## Vocabulary hints
 The learner can optionally reveal Darija translations for the key nouns in your next_prompt (separately from the verb conjugation, which they can also reveal on their own). Populate \`vocab_hints\` with the 1-3 most useful content words from next_prompt and their Darija translations, so they're not blocked by unrelated vocabulary — never include the target verb itself there.
+
+## Verb conjugation hint
+The learner can optionally reveal a full conjugation table for the target verb — but it must match the exact tense/form you used in next_prompt (present, past, future, or negative), not a default present-tense table, or it'll mislead them. In \`verb_conjugation_hint\`, report which tense you used, then give that same verb conjugated across all 8 persons in that identical tense (e.g. if next_prompt uses future tense with "ghadi", every form in the table should also use "ghadi").
 
 Use the drill_turn tool every turn.`;
 }

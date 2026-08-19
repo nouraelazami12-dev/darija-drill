@@ -23,19 +23,23 @@ function parseVerbs(json: string): string[] {
 }
 
 type VocabHint = { english: string; darija: string };
+type VerbConjugationHint = { tense: string; forms: { person: string; form: string }[] };
 
-function parseVocabHints(json: string | null): VocabHint[] | null {
+function parseJsonField<T>(json: string | null): T | null {
   if (!json) return null;
   try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : null;
+    return JSON.parse(json) as T;
   } catch {
     return null;
   }
 }
 
-function serializeMessage<T extends { vocabHints: string | null }>(m: T) {
-  return { ...m, vocabHints: parseVocabHints(m.vocabHints) };
+function serializeMessage<T extends { vocabHints: string | null; verbHint: string | null }>(m: T) {
+  return {
+    ...m,
+    vocabHints: parseJsonField<VocabHint[]>(m.vocabHints),
+    verbHint: parseJsonField<VerbConjugationHint>(m.verbHint),
+  };
 }
 
 // Assistant turns are shown to the learner as separate feedback/verdict/next-prompt pieces,
@@ -99,6 +103,7 @@ export async function POST(req: NextRequest) {
     let correctAnswer = "";
     let nextPrompt = "";
     let vocabHints: VocabHint[] = [];
+    let verbHint: VerbConjugationHint | null = null;
 
     const usedPrompts = allHistory.filter((m) => m.role === "assistant").map((m) => m.content);
     const lastAssistant = [...allHistory].reverse().find((m) => m.role === "assistant");
@@ -108,7 +113,7 @@ export async function POST(req: NextRequest) {
       const anthropic = getAnthropic();
       const response = await anthropic.messages.create({
         model: ROLEPLAY_MODEL,
-        max_tokens: 500,
+        max_tokens: 1000,
         thinking: NO_THINKING,
         system: verbDrillSystemPrompt(verbs, nextCombo, usedPrompts),
         tools: [VERB_DRILL_TURN_TOOL],
@@ -127,6 +132,7 @@ export async function POST(req: NextRequest) {
             correct_answer?: string;
             next_prompt?: string;
             vocab_hints?: VocabHint[];
+            verb_conjugation_hint?: VerbConjugationHint;
           }
         | undefined;
 
@@ -135,6 +141,7 @@ export async function POST(req: NextRequest) {
       correctAnswer = input?.correct_answer ?? "";
       nextPrompt = input?.next_prompt ?? "";
       vocabHints = Array.isArray(input?.vocab_hints) ? input.vocab_hints : [];
+      verbHint = input?.verb_conjugation_hint ?? null;
     } catch (err) {
       return NextResponse.json(
         { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
@@ -157,6 +164,7 @@ export async function POST(req: NextRequest) {
         targetVerb: nextCombo.verb,
         targetPerson: nextCombo.person,
         vocabHints: vocabHints.length > 0 ? JSON.stringify(vocabHints) : null,
+        verbHint: verbHint ? JSON.stringify(verbHint) : null,
       },
     });
 

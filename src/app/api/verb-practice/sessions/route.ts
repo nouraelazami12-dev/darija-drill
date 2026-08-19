@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       const anthropic = getAnthropic();
       const response = await anthropic.messages.create({
         model: ROLEPLAY_MODEL,
-        max_tokens: 500,
+        max_tokens: 1000,
         thinking: NO_THINKING,
         system: verbDrillSystemPrompt(finalVerbs, combo),
         tools: [VERB_DRILL_START_TOOL],
@@ -58,10 +58,15 @@ export async function POST(req: NextRequest) {
       });
       const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
       const input = toolUse?.input as
-        | { next_prompt?: string; vocab_hints?: { english: string; darija: string }[] }
+        | {
+            next_prompt?: string;
+            vocab_hints?: { english: string; darija: string }[];
+            verb_conjugation_hint?: { tense: string; forms: { person: string; form: string }[] };
+          }
         | undefined;
       const nextPrompt = input?.next_prompt?.trim();
       const vocabHints = Array.isArray(input?.vocab_hints) ? input.vocab_hints : [];
+      const verbHint = input?.verb_conjugation_hint ?? null;
       if (nextPrompt) {
         await prisma.verbPracticeMessage.create({
           data: {
@@ -71,6 +76,7 @@ export async function POST(req: NextRequest) {
             targetVerb: combo.verb,
             targetPerson: combo.person,
             vocabHints: vocabHints.length > 0 ? JSON.stringify(vocabHints) : null,
+            verbHint: verbHint ? JSON.stringify(verbHint) : null,
           },
         });
       }

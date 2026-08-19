@@ -1,8 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { VerbPracticeMessage, VerbPracticeMode } from "@/lib/types";
+import type { VerbConjugationHint, VerbPracticeMessage, VerbPracticeMode } from "@/lib/types";
 import { VERB_CONJUGATIONS, PERSONS, VERB_OPTIONS, isVerbKey } from "@/lib/verbs";
+
+const TENSE_LABEL: Record<string, string> = {
+  present: "present tense",
+  past: "past tense",
+  future: "future tense",
+  negative: "negative form",
+};
+
+function personLabel(person: string): string {
+  return PERSONS.find((p) => p.key === person)?.label ?? person;
+}
 
 const VERDICT_STYLE: Record<string, string> = {
   correct: "border-success/40 bg-success/10 text-success",
@@ -16,10 +27,31 @@ const VERDICT_LABEL: Record<string, string> = {
   wrong: "❌ Not quite",
 };
 
-function VerbConjugationHint({ verb }: { verb: string }) {
+function VerbHintTable({ verb, hint }: { verb: string; hint: VerbConjugationHint | null }) {
+  const label = VERB_OPTIONS.find((v) => v.key === verb)?.label ?? verb;
+
+  // Prefer the model's tense-matched table (matches whatever tense the prompt actually used).
+  // Fall back to the hardcoded present-tense table for older messages saved before this existed.
+  if (hint && hint.forms.length > 0) {
+    return (
+      <div className="rounded-xl bg-border/40 px-3 py-2 text-xs text-foreground">
+        <p className="mb-1 font-semibold">
+          {label} — {TENSE_LABEL[hint.tense] ?? hint.tense}
+        </p>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+          {hint.forms.map((f) => (
+            <p key={f.person}>
+              <span className="text-muted">{personLabel(f.person)}: </span>
+              {f.form}
+            </p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!isVerbKey(verb)) return null;
   const table = VERB_CONJUGATIONS[verb];
-  const label = VERB_OPTIONS.find((v) => v.key === verb)?.label ?? verb;
 
   return (
     <div className="rounded-xl bg-border/40 px-3 py-2 text-xs text-foreground">
@@ -87,7 +119,7 @@ export default function VerbChatBubble({
         </div>
       )}
       {!isUser && mode === "drill" && showVerbHint && message.targetVerb && (
-        <VerbConjugationHint verb={message.targetVerb} />
+        <VerbHintTable verb={message.targetVerb} hint={message.verbHint} />
       )}
       {!isUser && mode === "drill" && showWordHints && message.vocabHints && (
         <div className="rounded-xl bg-border/40 px-3 py-2 text-xs text-foreground">
