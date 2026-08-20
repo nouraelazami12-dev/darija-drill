@@ -149,7 +149,7 @@ Use the respond_in_character tool to answer. Put ONLY your in-character line in 
 }
 
 const VERB_DESCRIPTIONS: Record<string, string> = {
-  like: '"to like" (kay3jeb, from 3jeb "to please") — an impersonal construction: literally "X pleases me/you/him," so the thing being liked is the grammatical subject and the liker is an attached OBJECT pronoun suffix on kay3jeb-: kay3jbni (I like), kay3jbek (you like), kay3jbo (he likes), kay3jbha (she likes), kay3jbna (we like), kay3jbkom (you-pl like), kay3jbhom (they like). Do NOT use bgha for "to like" in this session — always use this kay3jeb-/3jeb construction, matching subject/object agreement with what\'s being liked (singular/plural) in the kay- prefix as needed.',
+  like: '"to like" (3jeb, "to please") — an impersonal construction: literally "X pleases [someone]," where the thing being liked is the grammatical SUBJECT and the person who likes it is an attached OBJECT pronoun SUFFIX. These are two independent agreement points — never conflate them:\n  - The PREFIX agrees with the GENDER of the thing being liked (the subject), NOT with who is doing the liking: "kay-" when the liked thing is masculine, "kat-" when the liked thing is feminine.\n  - The SUFFIX marks who is doing the liking (the experiencer), regardless of the liked thing\'s gender: -ni (I), -ek (you), -o (him), -ha (her), -na (us), -kom (you-pl), -hom (them).\nContrastive examples — study these carefully: "I like this book" (ktab = masculine) -> kay3jebni had lktab. "I like this song" (ghenya = feminine) -> kat3jebni had lghenya. "He likes this song" (song is feminine, so the prefix is kat-; the liker is "he", so the suffix is -o) -> kat3jbo had lghenya. "She likes this book" (book is masculine, so the prefix is kay-; the liker is "she", so the suffix is -ha) -> kay3jbha had lktab.\nBefore writing any form of this verb, first check the grammatical gender of the specific noun being liked and pick kay-/kat- accordingly — do NOT default to kay- regardless of that noun\'s gender, that is a common mistake. Do NOT use bgha for "to like" in this session — always use this 3jeb construction.',
   khas: 'Khas — "to need / must / should" — not a standard verb; conjugates by attaching a pronoun suffix directly (khassni, khassek, khasso, khassha, khassna, khasskom, khasshom). Don\'t force normal verb prefixes onto it.',
   "3nd": '3nd — "to have" — not a standard verb; conjugates by attaching a pronoun suffix directly (3ndi, 3ndek, 3ndo, 3ndha, 3ndna, 3ndkom, 3ndhom). Don\'t force normal verb prefixes onto it.',
 };
@@ -216,7 +216,8 @@ export const VERB_DRILL_START_TOOL: Tool = {
     properties: {
       next_prompt: {
         type: "string",
-        description: "The first English sentence for the learner to translate into Darija.",
+        description:
+          "The first English sentence for the learner to translate into Darija. ONLY the plain sentence — never add parentheticals, gender labels, or any other meta-commentary about the grammar (that reasoning belongs in your own analysis, not in what the learner sees).",
       },
       vocab_hints: VOCAB_HINTS_PROPERTY,
       verb_conjugation_hint: VERB_CONJUGATION_HINT_PROPERTY,
@@ -248,7 +249,8 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
       },
       next_prompt: {
         type: "string",
-        description: "The next English sentence for the learner to translate into Darija.",
+        description:
+          "The next English sentence for the learner to translate into Darija. ONLY the plain sentence — never add parentheticals, gender labels, or any other meta-commentary about the grammar (that reasoning belongs in your own analysis, not in what the learner sees).",
       },
       vocab_hints: VOCAB_HINTS_PROPERTY,
       verb_conjugation_hint: VERB_CONJUGATION_HINT_PROPERTY,
@@ -276,7 +278,7 @@ ${verbListText(verbs)}
 Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script). A combo-picking system outside your control decides which verb and grammatical person to test each turn, prioritizing whatever the learner is currently weakest on — you do not choose this yourself.
 
 ## This turn's target
-Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it.
+Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it. next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
 ${usedList}
 When the learner replies with their attempt, grade it — this is mandatory every single turn, never skip it:
 - "correct": the conjugation, person, and tense are all right (minor Arabizi spelling variation is fine — there's no single standard transliteration).
@@ -291,7 +293,7 @@ Keep prompts short and concrete — simple, everyday sentences a beginner could 
 The learner can optionally reveal Darija translations for the key nouns in your next_prompt (separately from the verb conjugation, which they can also reveal on their own). Populate \`vocab_hints\` with the 1-3 most useful content words from next_prompt and their Darija translations, so they're not blocked by unrelated vocabulary — never include the target verb itself there.
 
 ## Verb conjugation hint
-The learner can optionally reveal a full conjugation table for the target verb — but it must match the exact tense/form you used in next_prompt (present, past, future, or negative), not a default present-tense table, or it'll mislead them. In \`verb_conjugation_hint\`, report which tense you used, then give that same verb conjugated across all 8 persons in that identical tense (e.g. if next_prompt uses future tense with "ghadi", every form in the table should also use "ghadi").
+The learner can optionally reveal a full conjugation table for the target verb — but it must match the exact tense/form you used in next_prompt (present, past, future, or negative), not a default present-tense table, or it'll mislead them. In \`verb_conjugation_hint\`, report which tense you used, then give that same verb conjugated across all 8 persons in that identical tense (e.g. if next_prompt uses future tense with "ghadi", every form in the table should also use "ghadi"). If the target verb is "3jeb" ("to like"), every form in the table must also use the SAME kay-/kat- prefix that matches the gender of the specific thing being liked in next_prompt — don't silently default to kay- there either.
 
 Use the drill_turn tool every turn.`;
 }
