@@ -298,7 +298,11 @@ Your feedback text must never contradict the verdict you chose:
 IMPORTANT: the target described in Step 2 below is for the BRAND NEW prompt you're about to write next — it has nothing to do with what you just graded. Never let it leak into your grading of the learner's last answer; that must come only from your own previous message's actual English text.
 
 ## Step 2: write the next prompt
-Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it. next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
+Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Vary it across two independent axes, turn to turn — don't settle into a habit of always using the same one:
+- Tense: present/habitual, past, or future.
+- Sentence format: a declarative statement ("She likes tea."), a yes/no question ("Does she like tea?"), or a negative statement ("She doesn't like tea."). Mix these up freely. In particular, watch for this specific reflex and actively resist it: with "you"/"you all" as the target person, and with verbs like "to like" or "to have," it's very tempting to always reach for a question ("Do you all like...?", "Do you all have...?") — don't. Statements and negatives work exactly as well there ("You all like tea.", "You all don't have time.").
+Before finalizing next_prompt, glance at the recent-prompts list below (if any) — if they've mostly landed on one format or tense, deliberately pick a different one this turn instead of continuing the streak.
+next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
 ${usedList}
 Give the next prompt in the same turn as your grading from Step 1 — don't make the learner ask for it.
 
