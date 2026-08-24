@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       const anthropic = getAnthropic();
       const response = await anthropic.messages.create({
         model: ROLEPLAY_MODEL,
-        max_tokens: 1000,
+        max_tokens: 1500,
         thinking: NO_THINKING,
         system: verbDrillSystemPrompt(verbs, nextCombo, usedPrompts),
         tools: [VERB_DRILL_TURN_TOOL],
@@ -142,6 +142,13 @@ export async function POST(req: NextRequest) {
       nextPrompt = input?.next_prompt ?? "";
       vocabHints = Array.isArray(input?.vocab_hints) ? input.vocab_hints : [];
       verbHint = input?.verb_conjugation_hint ?? null;
+
+      if (!nextPrompt || !verdict) {
+        // Response was cut off mid-generation (e.g. ran out of tokens) before finishing the
+        // required fields — treat it the same as a request failure rather than saving a broken
+        // half-empty turn.
+        throw new Error("The tutor's response got cut off — try sending your answer again.");
+      }
     } catch (err) {
       return NextResponse.json(
         { error: err instanceof Error ? err.message : "LLM request failed", userMessage },

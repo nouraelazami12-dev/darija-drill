@@ -233,9 +233,15 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
   input_schema: {
     type: "object",
     properties: {
+      reasoning: {
+        type: "string",
+        description:
+          "PRIVATE scratch space, never shown to the learner. Work through whether the learner's answer is right here first — grammar, gender, person, tense, any doubts or back-and-forth — before you write anything else. By the end of this field you must have reached your final, settled conclusion, because every field after this one must state that conclusion cleanly with zero further deliberation. Keep it tight: 1-3 short sentences of actual checking, not an essay — every other required field still needs room after this one.",
+      },
       feedback: {
         type: "string",
-        description: "Brief, encouraging feedback on the learner's most recent answer.",
+        description:
+          "Brief, encouraging feedback on the learner's most recent answer — states your conclusion from `reasoning` above as a clean final statement. No hedging, no \"wait\"/\"actually\"/\"let me recheck\", no visible second-guessing — that all belongs in `reasoning`, not here.",
       },
       verdict: {
         type: "string",
@@ -255,7 +261,7 @@ export const VERB_DRILL_TURN_TOOL: Tool = {
       vocab_hints: VOCAB_HINTS_PROPERTY,
       verb_conjugation_hint: VERB_CONJUGATION_HINT_PROPERTY,
     },
-    required: ["feedback", "verdict", "next_prompt", "verb_conjugation_hint"],
+    required: ["reasoning", "feedback", "verdict", "next_prompt", "verb_conjugation_hint"],
   },
 };
 
@@ -282,6 +288,8 @@ This is mandatory every single turn, never skip it. Look ONLY at your own most r
 - "correct": the conjugation, person, and tense are all right for what YOUR LAST MESSAGE actually said (minor Arabizi spelling variation is fine — there's no single standard transliteration).
 - "close": the right idea/verb but a conjugation, agreement, or tense slip.
 - "wrong": wrong verb, or the conjugation doesn't work at all.
+
+Use the \`reasoning\` field to work out the correct answer and the verdict FIRST — that's the only place any "wait", "actually", "let me recheck", or self-correction belongs. Never write those in \`feedback\`; by the time you get there you must already be done deciding, so it only ever states the settled conclusion.
 
 Your feedback text must never contradict the verdict you chose:
 - If verdict is "correct", the feedback must be clean, confident praise ONLY — no hedging words like "close" or "almost", and no invented nitpick (e.g. a vague "just double check X") unless you can name a real, specific error. If you can't name a concrete problem, there isn't one — don't manufacture one just to sound thorough.
