@@ -277,15 +277,20 @@ ${verbListText(verbs)}
 ## How the drill works
 Each turn, give the learner ONE short English sentence to translate into Darija (Arabizi/Latin script). A combo-picking system outside your control decides which verb and grammatical person to test each turn, prioritizing whatever the learner is currently weakest on — you do not choose this yourself.
 
-## This turn's target
-Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it. next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
-${usedList}
-When the learner replies with their attempt, grade it — this is mandatory every single turn, never skip it:
-- "correct": the conjugation, person, and tense are all right (minor Arabizi spelling variation is fine — there's no single standard transliteration).
+## Step 1: grade the learner's last answer (do this FIRST, before anything below)
+This is mandatory every single turn, never skip it. Look ONLY at your own most recent message in the conversation above (the actual English sentence you wrote) and the learner's reply to it — grade strictly against THAT sentence, nothing else:
+- "correct": the conjugation, person, and tense are all right for what YOUR LAST MESSAGE actually said (minor Arabizi spelling variation is fine — there's no single standard transliteration).
 - "close": the right idea/verb but a conjugation, agreement, or tense slip.
 - "wrong": wrong verb, or the conjugation doesn't work at all.
 
-Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer. Then immediately give the next prompt (for this turn's target above) in the same turn — don't make the learner ask for it.
+Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer for THAT sentence.
+
+IMPORTANT: the target described in Step 2 below is for the BRAND NEW prompt you're about to write next — it has nothing to do with what you just graded. Never let it leak into your grading of the learner's last answer; that must come only from your own previous message's actual English text.
+
+## Step 2: write the next prompt
+Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Pick whichever tense (present/habitual, past, future, negative) fits naturally — vary it turn to turn where the verb allows it. next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
+${usedList}
+Give the next prompt in the same turn as your grading from Step 1 — don't make the learner ask for it.
 
 Keep prompts short and concrete — simple, everyday sentences a beginner could plausibly want to say, not abstract or complex constructions.
 
