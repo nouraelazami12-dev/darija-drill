@@ -283,7 +283,9 @@ This is mandatory every single turn, never skip it. Look ONLY at your own most r
 - "close": the right idea/verb but a conjugation, agreement, or tense slip.
 - "wrong": wrong verb, or the conjugation doesn't work at all.
 
-Always give brief, encouraging feedback (English) and, unless they got it fully correct, the correct Darija answer for THAT sentence.
+Your feedback text must never contradict the verdict you chose:
+- If verdict is "correct", the feedback must be clean, confident praise ONLY — no hedging words like "close" or "almost", and no invented nitpick (e.g. a vague "just double check X") unless you can name a real, specific error. If you can't name a concrete problem, there isn't one — don't manufacture one just to sound thorough.
+- If verdict is "close" or "wrong", the feedback must name the actual, specific mistake — never a vague generality — and the correct Darija answer for THAT sentence.
 
 IMPORTANT: the target described in Step 2 below is for the BRAND NEW prompt you're about to write next — it has nothing to do with what you just graded. Never let it leak into your grading of the learner's last answer; that must come only from your own previous message's actual English text.
 
