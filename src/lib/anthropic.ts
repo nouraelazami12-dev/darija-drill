@@ -164,6 +164,34 @@ function personLabel(person: string): string {
 
 export type DrillCombo = { verb: string; person: string };
 
+type SentenceFormat = "statement" | "question" | "negative";
+
+const SENTENCE_FORMATS: SentenceFormat[] = ["statement", "question", "negative"];
+
+const SENTENCE_FORMAT_INSTRUCTION: Record<SentenceFormat, string> = {
+  statement: 'a plain declarative statement (e.g. "She likes tea.")',
+  question: 'a yes/no question (e.g. "Does she like tea?")',
+  negative: 'a negative statement (e.g. "She doesn\'t like tea.")',
+};
+
+function detectSentenceFormat(prompt: string): SentenceFormat {
+  const p = prompt.trim();
+  if (p.endsWith("?")) return "question";
+  if (/\b(don't|doesn't|didn't|won't|isn't|aren't|wasn't|weren't|never|not)\b/i.test(p)) return "negative";
+  return "statement";
+}
+
+// Deterministically pick the format for the next prompt instead of leaving it to the model's own
+// judgment — relying on the model to "notice" and self-correct a format streak proved unreliable
+// (it overcorrected from all-questions to almost-never-questions). Avoid whichever format(s)
+// appeared in the last few turns so all three stay in rotation.
+function pickSentenceFormat(usedPrompts: string[]): SentenceFormat {
+  const recent = usedPrompts.slice(-3).map(detectSentenceFormat);
+  const candidates = SENTENCE_FORMATS.filter((f) => !recent.includes(f));
+  const pool = candidates.length > 0 ? candidates : SENTENCE_FORMATS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 const VOCAB_HINTS_PROPERTY = {
   type: "array" as const,
   items: {
@@ -270,6 +298,7 @@ export function verbDrillSystemPrompt(
   targetCombo: DrillCombo,
   usedPrompts: string[] = []
 ): string {
+  const sentenceFormat = pickSentenceFormat(usedPrompts);
   const usedList =
     usedPrompts.length > 0
       ? `\n## English sentences already used this session — don't reuse the exact same wording, vary the sentence even if it targets the same combo again\n${usedPrompts.map((p) => `- ${p}`).join("\n")}\n`
@@ -298,10 +327,7 @@ Your feedback text must never contradict the verdict you chose:
 IMPORTANT: the target described in Step 2 below is for the BRAND NEW prompt you're about to write next — it has nothing to do with what you just graded. Never let it leak into your grading of the learner's last answer; that must come only from your own previous message's actual English text.
 
 ## Step 2: write the next prompt
-Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. Vary it across two independent axes, turn to turn — don't settle into a habit of always using the same one:
-- Tense: present/habitual, past, or future.
-- Sentence format: a declarative statement ("She likes tea."), a yes/no question ("Does she like tea?"), or a negative statement ("She doesn't like tea."). Mix these up freely. In particular, watch for this specific reflex and actively resist it: with "you"/"you all" as the target person, and with verbs like "to like" or "to have," it's very tempting to always reach for a question ("Do you all like...?", "Do you all have...?") — don't. Statements and negatives work exactly as well there ("You all like tea.", "You all don't have time.").
-Before finalizing next_prompt, glance at the recent-prompts list below (if any) — if they've mostly landed on one format or tense, deliberately pick a different one this turn instead of continuing the streak.
+Write a prompt that requires conjugating "${targetCombo.verb}" for ${personLabel(targetCombo.person)}. It MUST be phrased as ${SENTENCE_FORMAT_INSTRUCTION[sentenceFormat]} — this is a hard requirement, not a suggestion, regardless of which verb or person is involved. Separately, pick whichever tense (present/habitual, past, or future) fits naturally, varying it turn to turn.
 next_prompt must be ONLY the plain English sentence itself — do your grammar reasoning (gender, tense, etc.) silently, never write it into next_prompt as a parenthetical or aside.
 ${usedList}
 Give the next prompt in the same turn as your grading from Step 1 — don't make the learner ask for it.
