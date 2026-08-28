@@ -86,11 +86,10 @@ export async function POST(req: NextRequest) {
   }
 
   const verbs = parseVerbs(session.verbs);
+  const pendingUserContent = message.trim();
 
-  const userMessage = await prisma.verbPracticeMessage.create({
-    data: { sessionId, role: "user", content: message.trim() },
-  });
-
+  // Don't persist the user's message until the LLM call actually succeeds — otherwise a failed
+  // request leaves an orphaned message in history, and retrying creates a genuine duplicate turn.
   const allHistory = await prisma.verbPracticeMessage.findMany({
     where: { sessionId },
     orderBy: { createdAt: "asc" },
@@ -118,10 +117,13 @@ export async function POST(req: NextRequest) {
         system: verbDrillSystemPrompt(verbs, nextCombo, usedPrompts),
         tools: [VERB_DRILL_TURN_TOOL],
         tool_choice: { type: "tool", name: "drill_turn" },
-        messages: history.map((m) => ({
-          role: m.role === "user" ? "user" : "assistant",
-          content: m.role === "assistant" ? formatAssistantTurn(m) : m.content,
-        })),
+        messages: [
+          ...history.map((m) => ({
+            role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+            content: m.role === "assistant" ? formatAssistantTurn(m) : m.content,
+          })),
+          { role: "user" as const, content: pendingUserContent },
+        ],
       });
 
       const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
@@ -151,7 +153,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
+        { error: err instanceof Error ? err.message : "LLM request failed" },
         { status: 502 }
       );
     }
@@ -159,6 +161,10 @@ export async function POST(req: NextRequest) {
     if (lastAssistant?.targetVerb && lastAssistant.targetPerson && verdict) {
       await gradeCombo(lastAssistant.targetVerb, lastAssistant.targetPerson, verdict as DrillVerdict);
     }
+
+    const userMessage = await prisma.verbPracticeMessage.create({
+      data: { sessionId, role: "user", content: pendingUserContent },
+    });
 
     const assistantMessage = await prisma.verbPracticeMessage.create({
       data: {
@@ -193,10 +199,13 @@ export async function POST(req: NextRequest) {
       system: verbConversationSystemPrompt(verbs),
       tools: [ROLEPLAY_TOOL],
       tool_choice: { type: "tool", name: "respond_in_character" },
-      messages: history.map((m) => ({
-        role: m.role === "user" ? "user" : "assistant",
-        content: m.content,
-      })),
+      messages: [
+        ...history.map((m) => ({
+          role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+          content: m.content,
+        })),
+        { role: "user" as const, content: pendingUserContent },
+      ],
     });
 
     const toolUse = response.content.find((b): b is ToolUseBlock => b.type === "tool_use");
@@ -209,10 +218,14 @@ export async function POST(req: NextRequest) {
     correction = input?.correction ?? "";
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "LLM request failed", userMessage },
+      { error: err instanceof Error ? err.message : "LLM request failed" },
       { status: 502 }
     );
   }
+
+  const userMessage = await prisma.verbPracticeMessage.create({
+    data: { sessionId, role: "user", content: pendingUserContent },
+  });
 
   const assistantMessage = await prisma.verbPracticeMessage.create({
     data: {
