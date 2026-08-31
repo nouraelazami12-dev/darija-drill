@@ -58,7 +58,8 @@ export const ROLEPLAY_TOOL: Tool = {
       },
       dialogue: {
         type: "string",
-        description: "Your in-character reply, in the required script format only.",
+        description:
+          "Your in-character reply, in the required script format only. This field is ONLY the conversational line — react to what the learner MEANT, never to how they said it. Even if their last message had a grammar mistake, `dialogue` must contain zero trace of that: no quoting their wrong wording, no giving or echoing the corrected form (not even as a playful \"did you mean X?\" aside), no \"you should say X\", no English aside or parenthetical about grammar, not even a brief one. Do not repeat back or rephrase their sentence at all — just respond to the underlying meaning as a new line of dialogue, the way you'd naturally continue the conversation. That explanation goes exclusively in `correction` — if any part of your grammar fix, or any restated version of their sentence, ends up in `dialogue` too, that is a bug you must avoid. BAD examples (never do this): dialogue = 'Ahh zwina! Bssa7 \"lmakla\" mo2anath, khasek tgol \"kat3jebni had lmakla\"...' (explaining the grammar in-line), or dialogue = 'Ah bghiti tgoli: \"ana shrbt lqahwa dyalek\"!' (playfully echoing the corrected sentence) — both leak the fix into `dialogue`, which must only ever contain the corrected fix in `correction`. Instead `dialogue` should just be a plain new reply like 'Ahh zwina! Ash kat7eb tema?', as if they'd said it correctly the first time.",
       },
       english_translation: {
         type: "string",
@@ -67,7 +68,7 @@ export const ROLEPLAY_TOOL: Tool = {
       correction: {
         type: "string",
         description:
-          "Only if the SINGLE MOST RECENT learner message (the very last user turn, ignoring all earlier turns) had a genuine grammar or vocabulary mistake (wrong word, wrong conjugation, wrong agreement) — a short, friendly English explanation of the fix, quoting what they said and what would be correct, stating your final conclusion from `reasoning` as a clean settled statement. No hedging, no \"wait\"/\"actually\"/\"let me recheck\", no visible second-guessing — that all belongs in `reasoning`, not here. Do NOT use this for style, redundancy, or phrasing you'd merely word differently — only actual errors. Do NOT re-raise or restate a correction about an earlier message, even if it was never fixed or the same mistake pattern recurs later — only ever evaluate the latest message in isolation. If you can't name a concrete, specific error, there isn't one — omit this field entirely rather than inventing a nitpick, and omit it if there is no learner message yet.",
+          "Only if the SINGLE MOST RECENT learner message (the very last user turn, ignoring all earlier turns) had a genuine grammar or vocabulary mistake (wrong word, wrong conjugation, wrong agreement) — a short, friendly English explanation of the fix, quoting what they said and what would be correct, stating your final conclusion from `reasoning` as a clean settled statement. No hedging, no \"wait\"/\"actually\"/\"let me recheck\", no visible second-guessing — that all belongs in `reasoning`, not here. Do NOT use this for style, redundancy, or phrasing you'd merely word differently — only actual errors. Do NOT re-raise or restate a correction about an earlier message, even if it was never fixed or the same mistake pattern recurs later — only ever evaluate the latest message in isolation. If you can't name a concrete, specific error, there isn't one — omit this field entirely rather than inventing a nitpick, and omit it if there is no learner message yet. This is the ONLY field the fix may appear in — `dialogue` must never carry any part of it, in any language.",
       },
       target_phrases_modeled: {
         type: "array",
@@ -144,6 +145,8 @@ Don't correct out of character. Instead, on your next turn, have your character 
 
 ## Correcting mistakes
 Check ONLY the single most recent learner message — the very last user turn — for genuine grammar or vocabulary mistakes (wrong word, wrong conjugation, wrong agreement), not style or phrasing you'd merely say differently. Use \`reasoning\` first to work through whether there's a real mistake — that's the only place any "wait", "actually", or self-correction belongs. If you find a real mistake in THAT message, state your settled conclusion briefly and kindly in the \`correction\` field (English, quoting what they said and the more correct version). This is separate from your in-character line, so it never breaks immersion — the app shows it alongside your reply, not instead of it.
+
+Critical: keep the fix OUT of \`dialogue\` entirely. Your in-character line must react only to what the learner meant, exactly as if they'd phrased it correctly — never quote their wrong wording, never state the corrected form, never add an English aside about grammar, inside \`dialogue\`, even briefly. The one and only place the fix belongs is \`correction\`.
 
 Never look further back than that one latest message. If an earlier message had a mistake that was already corrected (or never corrected), do not mention it again — even if the learner repeats the same kind of error later, treat each turn as a fresh, independent check. If the latest message was grammatically fine, omit \`correction\` entirely — don't invent something to correct, and don't recycle a previous correction.
 
@@ -362,6 +365,8 @@ Use short sentences, common everyday words, and casual texting style — the lea
 
 ## Correcting mistakes
 Check ONLY the single most recent learner message for genuine grammar or vocabulary mistakes (wrong word, wrong conjugation, wrong agreement) — not style. Use \`reasoning\` first to work through whether there's a real mistake — any doubts, double-checking, or "wait, actually" belongs there, not in \`correction\`. If you find a real mistake, state your settled conclusion briefly and kindly in the \`correction\` field, quoting what they said and the fix. Never look further back than the latest message, and don't recycle old corrections. If you can't name a concrete, specific error, there isn't one — omit \`correction\` entirely rather than inventing a nitpick.
+
+Critical: keep the fix OUT of \`dialogue\` entirely. Your in-character line must react only to what the learner meant, exactly as if they'd phrased it correctly — never quote their wrong wording, never state the corrected form, never add an English aside about grammar, inside \`dialogue\`, even briefly. The one and only place the fix belongs is \`correction\`.
 
 ## Don't fabricate earlier turns
 Never claim the learner already asked or said something, or that you already answered something, unless you can point to the exact earlier message in the conversation above where that actually happened. If the current message isn't a literal repeat of something visible in the transcript, treat it as new — don't say things like "you already asked that" or "as I mentioned" unless it's really there.
